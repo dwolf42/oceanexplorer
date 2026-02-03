@@ -6,6 +6,8 @@ import ocean.Vec2D;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
@@ -13,26 +15,59 @@ public class ShipApp {
 	private Socket toOceanServer;
 	private BufferedReader in;
 	private PrintWriter out;
+	private String hostNameOS;
+	int portOS;
 	private String name;
 	private String typ;
 	private Vec2D sector;
-	// private Vec2D direction -> required??
+	private Vec2D direction;
 	private JSONObject jsonObject;
 
-	public ShipApp(String hostName, int portOS, String name, String type, Vec2D sector, Vec2D direction) {
-		// do something ~
-	}
-// TODO: create class for JSON handling + UML
-// TODO: how is the procedure of starting the explorer.ShipApp?
-// TODO: rework naming on UML
-// TODO: some colons : are wrong on the UML
-// TODO: add handleMessage() parameter name to UML
-// TODO: what about the Database Class? We need data from mariadb guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
-	public boolean connectOS(String hostName, int portOS) {
-		// do something ~
+	public ShipApp(String hostNameOS, int portOS, String name, String typ, Vec2D sector, Vec2D direction) {
+		this.hostNameOS = hostNameOS;
+		this.name = name;
+		this.typ = typ;
+		this.sector = sector;
+		this.direction = direction;
+
+		if (connectOS(hostNameOS, portOS)) {
+			System.out.println("Connected to OceanServer");
+		} else {
+			System.out.println("Failed to connect to OceanServer");
+		}
 	}
 
-	public boolean
+	class OceanListener extends Thread {
+		@Override
+		public void run() {
+			while (!isInterrupted()) {
+				try {
+					String line = in.readLine();
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
+
+	public boolean connectOS(String hostNameOS, int portOS) {
+		// Connect to OceanServer
+		// Initialize reader/writer objects
+		// Return true if connection is successful
+		try {
+			toOceanServer = new Socket(hostNameOS, portOS);
+			in = new BufferedReader(new InputStreamReader(toOceanServer.getInputStream()));
+			out = new PrintWriter(toOceanServer.getOutputStream(), true);
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
 
 	public void launch(String name, String typ, Vec2D sector, Vec2D direction) {
 		// do something
