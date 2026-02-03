@@ -22,6 +22,7 @@ public class ShipApp {
 	private Vec2D sector;
 	private Vec2D direction;
 	private JSONObject jsonObject;
+	private OceanListener oceanListener;
 
 	public ShipApp(String hostNameOS, int portOS, String name, String typ, Vec2D sector, Vec2D direction) {
 		this.hostNameOS = hostNameOS;
@@ -32,6 +33,7 @@ public class ShipApp {
 
 		if (connectOS(hostNameOS, portOS)) {
 			System.out.println("Connected to OceanServer");
+			launch(name, typ, sector, direction);
 		} else {
 			System.out.println("Failed to connect to OceanServer");
 		}
@@ -43,15 +45,17 @@ public class ShipApp {
 			while (!isInterrupted()) {
 				try {
 					String line = in.readLine();
-
+					JSONObject receivedJO = new JSONObject(line);
+					handleMessage(receivedJO);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+				System.out.println("OceanListener thread exiting");
 			}
 		}
 	}
 
-// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
+	// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
 
 	public boolean connectOS(String hostNameOS, int portOS) {
 		// Connect to OceanServer
@@ -68,10 +72,10 @@ public class ShipApp {
 		return false;
 	}
 
-
 	public void launch(String name, String typ, Vec2D sector, Vec2D direction) {
-		// do something
+
 	}
+
 	public void navigate(Rudder rudder, Course course) {
 		// do something ~
 	}
