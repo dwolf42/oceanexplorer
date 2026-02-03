@@ -16,7 +16,7 @@ public class ShipApp {
 	private BufferedReader in;
 	private PrintWriter out;
 	private String hostNameOS;
-	int portOS;
+	private int portOS;
 	private String name;
 	private String typ;
 	private Vec2D sector;
