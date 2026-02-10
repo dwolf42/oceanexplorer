@@ -3,7 +3,9 @@ package explorer;
 import ocean.Course;
 import ocean.Rudder;
 import ocean.Vec2D;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,9 +33,9 @@ public class ShipApp {
 		this.sector = sector;
 		this.direction = direction;
 
+		// establish connection to OceanServer
 		if (connectOS(hostNameOS, portOS)) {
 			System.out.println("Connected to OceanServer");
-			launch(name, typ, sector, direction);
 		} else {
 			System.out.println("Failed to connect to OceanServer");
 		}
@@ -44,9 +46,7 @@ public class ShipApp {
 		public void run() {
 			while (!isInterrupted()) {
 				try {
-					String line = in.readLine();
-					JSONObject receivedJO = new JSONObject(line);
-					handleMessage(receivedJO);
+					in.readLine(); // filler
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -65,15 +65,37 @@ public class ShipApp {
 			toOceanServer = new Socket(hostNameOS, portOS);
 			in = new BufferedReader(new InputStreamReader(toOceanServer.getInputStream()));
 			out = new PrintWriter(toOceanServer.getOutputStream(), true);
-			return true;
+			launch(name, typ, sector, direction);
+			String msg = handleMessage(in.readLine());
+
+			if (msg.equals("launched")) {
+				oceanListener = new OceanListener();
+				oceanListener.start();
+				return true;
+			}
+			System.out.println("MSG from Server: " + msg);
+			toOceanServer.close();
+			return false;
 		} catch (IOException e) {
 			e.printStackTrace();
+			return false;
 		}
-		return false;
+
 	}
 
 	public void launch(String name, String typ, Vec2D sector, Vec2D direction) {
+		jsonObject = new JSONObject();
+		jsonObject.put("cmd", "launch");
+		jsonObject.put("name", name);
+		jsonObject.put("typ", typ);
+		jsonObject.put("sector", sector.toJson());
+		jsonObject.put("dir", direction.toJson());
+		out.println(jsonObject);
+			/*
+{ “cmd“:“launch“, “name“:“schiffname“, “typ“:“ship“,
+“sector“:{ “vec2“:[x,y] }, “dir“:{ “vec2“:[dx,dy] }
 
+			 */
 	}
 
 	public void navigate(Rudder rudder, Course course) {
@@ -88,8 +110,13 @@ public class ShipApp {
 		// do something ~
 	}
 
-	public void handleMessage(JSONObject jsonObject) {
-		// do something ~
+	public String handleMessage(String msgFromServer) {
+		JSONObject oceanJson = new JSONObject(new JSONTokener(msgFromServer));
+		if (oceanJson.get("cmd").equals("launched")) {
+			return "launched";
+		} else {
+			return oceanJson.get("type") + ": " + oceanJson.get("text");
+		}
 	}
 
 	public void updateSector(Vec2D sector) {
