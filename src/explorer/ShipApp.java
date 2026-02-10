@@ -27,12 +27,15 @@ public class ShipApp {
 	public ShipApp(String name, String typ) {
 		this.name = name;
 		this.typ = typ;
+
+		jsonObject = new JSONObject();
+		jsonObject.put("name", this.name);
+		jsonObject.put("typ", this.typ);
 	}
 
 	class OceanListener extends Thread {
 		private BufferedReader in;
 		private PrintWriter out;
-		private String line;
 
 		@Override
 		public void run() {
@@ -40,85 +43,107 @@ public class ShipApp {
 				in = new BufferedReader(new InputStreamReader(toOceanServer.getInputStream()));
 				out = new PrintWriter(toOceanServer.getOutputStream(), true);
 
-				while (!isInterrupted()) {
-					line = in.readLine();
+				String line;
 
-					if (!line.isEmpty()) {
-						String msg = handleMessage(line);
-						if (msg.equals("launched")) {
-							System.out.println("Ship is launched");
-
-						} else {
-							// TODO: What to do, if the message is not launched?
-							System.out.println("MSG from Server: " + line);
-						}
-					}
-					System.out.println("OceanListener thread exiting");
-				} catch(IOException e){
-					e.printStackTrace();
+				while (!isInterrupted() && (line = in.readLine()) != null) {
+					handleMessage(new JSONObject(new JSONTokener(line)));
 				}
-			}
-		}
 
-		// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
-
-		public boolean connectOS(String hostNameOS, int portOS) {
-			try {
-				toOceanServer = new Socket(hostNameOS, portOS);
-				oceanListener = new OceanListener();
-				oceanListener.start();
-				return true;
+				System.out.println("OceanListener thread exiting");
 			} catch (IOException e) {
 				e.printStackTrace();
-				return false;
 			}
-		}
-
-		public void launch(Vec2D sector, Vec2D direction) {
-			jsonObject = new JSONObject();
-			jsonObject.put("cmd", "launch");
-			jsonObject.put("name", this.name);
-			jsonObject.put("typ", this.typ);
-			jsonObject.put("sector", sector.toJson());
-			jsonObject.put("dir", direction.toJson());
-			oceanListener.out.println(jsonObject);
-			/*
-{ “cmd“:“launch“, “name“:“schiffname“, “typ“:“ship“,
-“sector“:{ “vec2“:[x,y] }, “dir“:{ “vec2“:[dx,dy] }
-
-			 */
-		}
-
-		public void navigate(Rudder rudder, Course course) {
-			// do something ~
-		}
-
-		public void scan() {
-			// do something ~
-		}
-
-		public void radar() {
-			// do something ~
-		}
-
-		public String handleMessage(String msgFromServer) {
-			JSONObject oceanJson = new JSONObject(new JSONTokener(msgFromServer));
-			if (oceanJson.get("cmd").equals("launched")) {
-				return "launched";
-			} else {
-				return oceanJson.get("type") + ": " + oceanJson.get("text");
-			}
-		}
-
-		public void updateSector(Vec2D sector) {
-			// do something ~
-		}
-
-		public void updatePosition(Vec2D position) {
-			// do something ~
-		}
-
-		public void exit() {
-			// do something ~
 		}
 	}
+
+	// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
+
+	public boolean connectOS(String hostNameOS, int portOS) {
+		try {
+			toOceanServer = new Socket(hostNameOS, portOS);
+			oceanListener = new OceanListener();
+			oceanListener.start();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+
+	public void handleMessage(JSONObject jsonObject) {
+		String cmd = jsonObject.get("cmd").toString();
+		switch (cmd) {
+			case "launch" -> oceanListener.out.println(jsonObject);
+			case "launched" -> System.out.printf("Launched: %s, ", jsonObject.get("id").toString());
+			case "message" -> message(jsonObject);
+		//	case "navigate" -> navigate();
+			case "move2d" -> move(jsonObject);
+		//	case "crash" -> crash();
+		//	case "scan" -> scan();
+		//	case "scanned" -> scanned();
+		//	case "radar" -> radar();
+		//	case "radarresponse" -> radarresponse();
+		//	case "exit" -> exit();
+		}
+	}
+	public void launch() {
+		this.sector = new Vec2D(0, 0);
+		this.direction = new Vec2D(1, 1);
+
+		jsonObject.put("cmd", "launch");
+		jsonObject.put("sector", this.sector.toJson());
+		jsonObject.put("dir", this.direction.toJson());
+		handleMessage(jsonObject);
+	}
+
+	public void message(JSONObject jsonObject) {
+		System.out.println("Message: " + jsonObject.toString());
+	}
+
+	public void move(JSONObject jsonObject) {
+		// TODO: Should we also update the JSONObject, like sector and direction?
+		this.sector = Vec2D.fromJson(jsonObject.getJSONObject("sector"));
+		this.direction = Vec2D.fromJson(jsonObject.getJSONObject("dir"));
+		System.out.printf("Current position: %s, ", this.sector.toString());
+		System.out.printf("Current direction: %s\n", this.direction.toString());
+	}
+
+	public void navigate(Rudder rudder, Course course) {
+		// do something ~
+	}
+	public void scan() {
+		// do something ~
+	}
+
+	public void radar() {
+		// do something ~
+	}
+
+
+
+	public void updateSector(Vec2D sector) {
+		// do something ~
+	}
+
+	public void updatePosition(Vec2D position) {
+		// do something ~
+	}
+
+	public void exit() {
+		// do something ~
+	}
+
+	public static void main(String[] args) {
+		ShipApp shipApp = new ShipApp("The Ship", "ship");
+
+		// establish connection to OceanServer
+		if (shipApp.connectOS("127.0.0.1", 8150)) {
+			System.out.println("Connected to OceanServer");
+			shipApp.launch();
+		} else {
+			System.out.println("Failed to connect to OceanServer");
+		}
+
+	}
+}
