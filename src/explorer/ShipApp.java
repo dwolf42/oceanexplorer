@@ -134,16 +134,5 @@ public class ShipApp {
 		// do something ~
 	}
 
-	public static void main(String[] args) {
-		ShipApp shipApp = new ShipApp("The Ship", "ship");
 
-		// establish connection to OceanServer
-		if (shipApp.connectOS("127.0.0.1", 8150)) {
-			System.out.println("Connected to OceanServer");
-			shipApp.launch();
-		} else {
-			System.out.println("Failed to connect to OceanServer");
-		}
-
-	}
 }
