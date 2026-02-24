@@ -3,12 +3,13 @@ package explorer;
 import java.util.Scanner;
 
 public class Explorer {
-	public static void main(String[] args) {
+	private boolean isExploring = true;
+	public static void main(String[] args) throws InterruptedException {
 		Explorer exp = new Explorer();
 		exp.explore();
 	}
 
-	public void explore() {
+	public void explore() throws InterruptedException {
 		ShipApp shipApp = new ShipApp("The Ship", "ship");
 
 		// establish connection to OceanServer
@@ -22,15 +23,28 @@ public class Explorer {
 		Scanner scanner = new Scanner(System.in);
 
 		String input;
-		while (true) {
+		while (isExploring) {
 			System.out.println("System waiting for input:");
-			input = scanner.nextLine();
-			if (input.equalsIgnoreCase("exit")) {
-				shipApp.exit();
+			input = scanner.nextLine().toLowerCase();
+
+			switch (input) {
+				case "scan":
+					shipApp.scan();
+					break;
+				case "navigate":
+					shipApp.navigate();
+					break;
+				case "radar":
+					shipApp.radar();
+					break;
+				case "exit":
+					isExploring = false;
+					shipApp.exit();
+					break;
+				default:
+					System.out.println("Invalid input");
+					break;
 			}
-
-
-
 		}
 	}
 
