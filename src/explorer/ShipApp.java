@@ -1,6 +1,7 @@
 package explorer;
 
 import ocean.Course;
+import ocean.RadarEcho;
 import ocean.Rudder;
 import ocean.Vec2D;
 import org.json.JSONObject;
@@ -177,8 +178,30 @@ public class ShipApp {
 		wait();
 	}
 
+	/*
+
+	Current position: (vec2: 3,3), Current direction: (1,1)
+
+	Response: {"echos":
+	[ {"ground":"Water","sector":{"vec2":[2,3]},"height":0},
+	  {"ground":"Water","sector":{"vec2":[2,4]},"height":0},
+	  {"ground":"Water","sector":{"vec2":[3,4]},"height":0},
+	  {"ground":"Water","sector":{"vec2":[4,4]},"height":0},
+	  {"ground":"Water","sector":{"vec2":[4,3]},"height":0},
+	  {"ground":"Water","sector":{"vec2":[4,2]},"height":0},
+	  {"ground":"Water","sector":{"vec2":[3,2]},"height":0},
+	  {"ground":"Water","sector":{"vec2":[2,2]},"height":0}],
+	  "cmd":"radarresponse","id":"#0#The Ship"}
+	 */
+
+// TODO: navigation must always trigger radar scan/response
+// TODO: navigation destination must be checked against impassible by radresponse?
+//  	 -> What should happen if ship moves to such an area?
+
 	public synchronized void radarresponse(JSONObject jsonObject) {
 		System.out.println("Response: " + jsonObject.toString());
+		RadarEcho re = RadarEcho.fromJson(jsonObject);
+
 		notify();
 	}
 
