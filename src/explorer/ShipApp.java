@@ -59,6 +59,8 @@ public class ShipApp {
 				System.out.println("OceanListener thread exiting");
 			} catch (IOException e) {
 				e.printStackTrace();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
 			}
 		}
 	}
@@ -77,7 +79,7 @@ public class ShipApp {
 		}
 	}
 
-	public synchronized void handleMessage(JSONObject jsonObject) {
+	public synchronized void handleMessage(JSONObject jsonObject) throws InterruptedException {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
 			case "launch":
@@ -85,6 +87,7 @@ public class ShipApp {
 				break;
 			case "launched":
 				System.out.printf("Launched: %s, ", jsonObject.get("id").toString());
+//				notify();
 				break;
 			case "message":
 				message(jsonObject);
@@ -194,9 +197,9 @@ public class ShipApp {
 	  "cmd":"radarresponse","id":"#0#The Ship"}
 	 */
 
-// TODO: navigation must always trigger radar scan/response
-// TODO: navigation destination must be checked against impassible by radresponse?
-//  	 -> What should happen if ship moves to such an area?
+	// TODO: navigation must always trigger radar scan/response
+	// TODO: navigation destination must be checked against impassible by radresponse?
+	//  	 -> What should happen if ship moves to such an area?
 
 	public synchronized void radarresponse(JSONObject jsonObject) {
 		System.out.println("Response: " + jsonObject.toString());
