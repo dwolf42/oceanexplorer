@@ -196,7 +196,7 @@ public class ShipApp {
 	  {"ground":"Water","sector":{"vec2":[2,2]},"height":0}],
 	  "cmd":"radarresponse","id":"#0#The Ship"}
 	 */
-
+	// FIXME: Radar/Response is broken, most likely due to wait()
 	// TODO: navigation must always trigger radar scan/response
 	// TODO: navigation destination must be checked against impassible by radresponse?
 	//  	 -> What should happen if ship moves to such an area?
