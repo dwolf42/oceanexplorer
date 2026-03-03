@@ -2,7 +2,6 @@ package explorer;
 
 import ocean.Course;
 import ocean.RadarEcho;
-import ocean.Rudder;
 import ocean.Vec2D;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -25,14 +24,15 @@ public class ShipApp {
 	private String name;
 	private String typ;
 	private Vec2D sector;
-	private Vec2D currDirec;
-	private Vec2D destDirec;
+	private Vec2D currDirect;
+	private Vec2D targetDirection;
 	private JSONObject jsonObject;
 	private OceanListener oceanListener;
 	private ArrayList<RadarEcho> echos;
 
 	/*
-		Die Ziel-Himmelsrichtung bestimmt die Operation, die auf die derzeitige Himmelsrichtung angewandt wird.
+		Basis ist der aktuelle Sektor
+		Die Ziel-Himmelsrichtung bestimmt die Operation, die auf den derzeitigen Sektor angewandt wird.
 		Das Ergebnis ist der Sektor. Dieser wird verwendet, um aus der Echos-Liste die Information über
 		den Ground-Zustand am Zielort zu erhalten
 
@@ -52,6 +52,7 @@ public class ShipApp {
 		jsonObject.put("typ", this.typ);
 
 		operators = new HashMap<>();
+		//                           targetDest             Oper on currSect
 		operators.put(new Integer[] {-1, 1}, new Integer[] {1, -1}); // nw
 		operators.put(new Integer[] {0, 1}, new Integer[] {1, 0}); // n
 		operators.put(new Integer[] {1, 1}, new Integer[] {1, 1}); // ne
@@ -140,11 +141,11 @@ public class ShipApp {
 
 	public synchronized void launch() throws InterruptedException {
 		this.sector = new Vec2D(2, 5);
-		this.currDirec = new Vec2D(-1, 1);
+		this.currDirect = new Vec2D(-1, 1);
 
 		jsonObject.put("cmd", "launch");
 		jsonObject.put("sector", this.sector.toJson());
-		jsonObject.put("dir", this.currDirec.toJson());
+		jsonObject.put("dir", this.currDirect.toJson());
 		handleMessage(jsonObject);
 		wait();
 	}
@@ -156,31 +157,58 @@ public class ShipApp {
 
 	public synchronized void move2d(JSONObject jsonObject) {
 		this.sector = Vec2D.fromJson(jsonObject.getJSONObject("sector"));
-		this.currDirec = Vec2D.fromJson(jsonObject.getJSONObject("dir"));
+		this.currDirect = Vec2D.fromJson(jsonObject.getJSONObject("dir"));
 		jsonObject.put("sector", this.sector.toJson());
-		jsonObject.put("dir", this.currDirec.toJson());
+		jsonObject.put("dir", this.currDirect.toJson());
 		System.out.printf("Current position: %s, ", this.sector.toString());
-		System.out.printf("Current direction: %s\n", this.currDirec.toString());
+		System.out.printf("Current direction: %s\n", this.currDirect.toString());
 		notify();
 	}
 
 	// Rudder rudder, Course course
 	public synchronized void navigate() throws InterruptedException {
 		Scanner scanner = new Scanner(System.in);
-		int selection;
 
 		JSONObject nav = new JSONObject();
 		nav.put("cmd", "navigate");
 
 		// TODO: Current position should be translated to compass directions
 		System.out.printf("Current position: %s, ", this.sector.toString());
-		System.out.printf("Current direction: %s\n", this.currDirec.toString());
-		System.out.println("Set rudder (Left = 0 | Center = 1 | Right = 2):");
+		System.out.printf("Current direction: %s\n", this.currDirect.toString());
+		System.out.println("Set rudder Left | Center | Right:");
 		// To adjust the rudder without string operations, an array is created from the available enums.
 		// The corresponding rudder-alignment is then used based on the index.
-		Rudder[] rudders = Rudder.values();
-		selection = scanner.nextInt();
+		String selection;
+		selection = scanner.nextLine();
+		// L = -1 | C = 0 | R = +1
+		/*          x y
+	         sectorX 2, sectorY 5
+
+	        targetSectorX = targetDirection Operant (F+/B-) VarX
+	        targetSectorY = targetDirection Operant (F+/B-) VarY
+
+	        targetDirection = currentDirection Operant (-1/+0/+1)
+
+	                       nw
+	        l 0,-1      d -1,1      r +1,0
+
+	                       n
+	        l -1,0      d 0,1       r +1,0
+
+	                       ne
+	        l -1,0      d 1,1       r 0,-1
+
+	                       e
+	        l 0,+1      d 1,0       r 0,-1
+
+
+
+		 */
+		targetDirection = new Vec2D();
+
+
 		nav.put("rudder", rudders[selection].toString());
+
 		// flushes the remaining newline character from scanner to prevent it from skipping the following scan
 		scanner.skip("\n");
 
@@ -220,6 +248,7 @@ public class ShipApp {
 	  {"ground":"Water","sector":{"vec2":[2,2]},"height":0}],
 	  "cmd":"radarresponse","id":"#0#The Ship"}
 	 */
+	// TODO: RadResp must not be processed
 	// TODO: navigation must always trigger radar scan/response
 	// TODO: navigation destination must be checked against impassible by radresponse?
 	//  	 -> What should happen if ship moves to such an area?
