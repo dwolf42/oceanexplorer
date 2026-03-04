@@ -2,6 +2,7 @@ package explorer;
 
 import ocean.Course;
 import ocean.RadarEcho;
+import ocean.Rudder;
 import ocean.Vec2D;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,8 +25,7 @@ public class ShipApp {
 	private String name;
 	private String typ;
 	private Vec2D sector;
-	private Vec2D currDirect;
-	private Vec2D targetDirection;
+	private Vec2D direction;
 	private JSONObject jsonObject;
 	private OceanListener oceanListener;
 	private ArrayList<RadarEcho> echos;
@@ -40,8 +40,6 @@ public class ShipApp {
 		w = -1, 0					e = 1, 0
 		sw = -1, -1	   s = 0, -1	se = 1, -1
 	 */
-	// Direction, Operator
-	HashMap<Integer[], Integer[]> operators;
 
 	public ShipApp(String name, String typ) {
 		this.name = name;
@@ -50,18 +48,6 @@ public class ShipApp {
 		jsonObject = new JSONObject();
 		jsonObject.put("name", this.name);
 		jsonObject.put("typ", this.typ);
-
-		operators = new HashMap<>();
-		//                           targetDest             Oper on currSect
-		operators.put(new Integer[] {-1, 1}, new Integer[] {1, -1}); // nw
-		operators.put(new Integer[] {0, 1}, new Integer[] {1, 0}); // n
-		operators.put(new Integer[] {1, 1}, new Integer[] {1, 1}); // ne
-		operators.put(new Integer[] {1, 0}, new Integer[] {0, 1}); // e
-		operators.put(new Integer[] {1, -1}, new Integer[] {-1, 1}); // se
-		operators.put(new Integer[] {0, -1}, new Integer[] {-1, 0}); // s
-		operators.put(new Integer[] {-1, -1}, new Integer[] {-1, -1}); // sw
-		operators.put(new Integer[] {-1, 0}, new Integer[] {0, -1}); // w
-
 	}
 
 	class OceanListener extends Thread {
@@ -141,11 +127,11 @@ public class ShipApp {
 
 	public synchronized void launch() throws InterruptedException {
 		this.sector = new Vec2D(2, 5);
-		this.currDirect = new Vec2D(-1, 1);
+		this.direction = new Vec2D(-1, 1);
 
 		jsonObject.put("cmd", "launch");
 		jsonObject.put("sector", this.sector.toJson());
-		jsonObject.put("dir", this.currDirect.toJson());
+		jsonObject.put("dir", this.direction.toJson());
 		handleMessage(jsonObject);
 		wait();
 	}
@@ -157,11 +143,11 @@ public class ShipApp {
 
 	public synchronized void move2d(JSONObject jsonObject) {
 		this.sector = Vec2D.fromJson(jsonObject.getJSONObject("sector"));
-		this.currDirect = Vec2D.fromJson(jsonObject.getJSONObject("dir"));
+		this.direction = Vec2D.fromJson(jsonObject.getJSONObject("dir"));
 		jsonObject.put("sector", this.sector.toJson());
-		jsonObject.put("dir", this.currDirect.toJson());
+		jsonObject.put("dir", this.direction.toJson());
 		System.out.printf("Current position: %s, ", this.sector.toString());
-		System.out.printf("Current direction: %s\n", this.currDirect.toString());
+		System.out.printf("Current direction: %s\n", this.direction.toString());
 		notify();
 	}
 
@@ -174,41 +160,13 @@ public class ShipApp {
 
 		// TODO: Current position should be translated to compass directions
 		System.out.printf("Current position: %s, ", this.sector.toString());
-		System.out.printf("Current direction: %s\n", this.currDirect.toString());
+		System.out.printf("Current direction: %s\n", this.direction.toString());
 		System.out.println("Set rudder Left | Center | Right:");
 		// To adjust the rudder without string operations, an array is created from the available enums.
 		// The corresponding rudder-alignment is then used based on the index.
-		String selection;
-		selection = scanner.nextLine();
-		// L = -1 | C = 0 | R = +1
-		/*          x y
-	         sectorX 2, sectorY 5
-
-	        targetSectorX = targetDirection Operant (F+/B-) VarX
-	        targetSectorY = targetDirection Operant (F+/B-) VarY
-
-	        targetDirection = currentDirection Operant (-1/+0/+1)
-
-	                       nw
-	        l 0,-1      d -1,1      r +1,0
-
-	                       n
-	        l -1,0      d 0,1       r +1,0
-
-	                       ne
-	        l -1,0      d 1,1       r 0,-1
-
-	                       e
-	        l 0,+1      d 1,0       r 0,-1
-
-
-
-		 */
-		targetDirection = new Vec2D();
-
-
+		Rudder[] rudders = Rudder.values();
+		int selection = scanner.nextInt();
 		nav.put("rudder", rudders[selection].toString());
-
 		// flushes the remaining newline character from scanner to prevent it from skipping the following scan
 		scanner.skip("\n");
 
@@ -248,10 +206,6 @@ public class ShipApp {
 	  {"ground":"Water","sector":{"vec2":[2,2]},"height":0}],
 	  "cmd":"radarresponse","id":"#0#The Ship"}
 	 */
-	// TODO: RadResp must not be processed
-	// TODO: navigation must always trigger radar scan/response
-	// TODO: navigation destination must be checked against impassible by radresponse?
-	//  	 -> What should happen if ship moves to such an area?
 
 	public synchronized void radarresponse(JSONObject jsonObject) {
 		System.out.println("Response: " + jsonObject.toString());
