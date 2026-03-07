@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>Ship Scan Data</title>
+</head>
+<body>
+<h1>Ship Scan Data</h1>
+<div class="button-container">
+    <a href='http://localhost:8000/ships'><p class="back-button">Go back to the list of ships</p></a>
+    <a href='http://localhost:8000'><p class="homepage-back-button">Go back to the homepage</p></a>
+</div>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+        <tr>
+            <th>Sector ID</th>
+            <th>Total depth average</th>
+            <th>Standard deviation</th>
+        </tr>
+        </thead>
+        <tbody>
+        %s
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

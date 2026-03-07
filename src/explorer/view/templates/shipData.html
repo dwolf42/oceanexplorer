@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>Ship data</title>
+<!--    <style>-->
+<!--        * {-->
+<!--            box-sizing: border-box;-->
+<!--        }-->
+
+<!--        body {-->
+<!--            font-family: Arial, sans-serif;-->
+<!--            margin: 20px;-->
+<!--        }-->
+
+<!--        h1 {-->
+<!--            font-size: clamp(1.2rem, 4vw, 2rem);-->
+<!--            margin-bottom: 1rem;-->
+<!--        }-->
+
+<!--        a {-->
+<!--            display: flex;-->
+<!--            text-decoration: none;-->
+<!--            height: fit-content;-->
+<!--            width: fit-content;-->
+<!--        }-->
+
+<!--        a:focus, a:active {-->
+<!--            color: black;-->
+<!--        }-->
+
+<!--        .back-button {-->
+<!--            padding: 1rem;-->
+<!--            background-color: beige;-->
+<!--            border: 2px solid beige;-->
+<!--            border-radius: 1rem;-->
+<!--            text-decoration: none;-->
+<!--            color: black;-->
+<!--            display: inline-block;-->
+<!--        }-->
+
+<!--        .button-container {-->
+<!--            display: flex;-->
+<!--            justify-content: flex-start;-->
+<!--            margin-bottom: 1rem;-->
+<!--            gap: 10px;-->
+<!--        }-->
+
+<!--        .table-wrapper {-->
+<!--            overflow-x: auto;-->
+<!--            -webkit-overflow-scrolling: touch;-->
+<!--        }-->
+
+<!--        table {-->
+<!--            width: 100%%;-->
+<!--            border-collapse: collapse;-->
+<!--        }-->
+
+<!--        th, td {-->
+<!--            padding: 10px;-->
+<!--            text-align: left;-->
+<!--            border: 1px solid #ddd;-->
+<!--        }-->
+
+<!--        th {-->
+<!--            background-color: #54759d;-->
+<!--            color: white;-->
+<!--            white-space: nowrap;-->
+<!--        }-->
+
+<!--        tr:nth-child(even) {-->
+<!--            background-color: #f9f9f9;-->
+<!--        }-->
+
+<!--        @media screen and (max-width: 600px) {-->
+<!--            body {-->
+<!--                margin: 10px;-->
+<!--            }-->
+
+<!--            .back-button {-->
+<!--                padding: 0.7rem 0.9rem;-->
+<!--                font-size: 0.85rem;-->
+<!--            }-->
+
+<!--            .table-wrapper {-->
+<!--                overflow-x: visible;-->
+<!--            }-->
+
+<!--            table, thead, tbody, th, td, tr {-->
+<!--                display: block;-->
+<!--            }-->
+
+<!--            thead tr {-->
+<!--                display: none;-->
+<!--            }-->
+
+<!--            tr {-->
+<!--                border: 1px solid #ccc;-->
+<!--                border-radius: 8px;-->
+<!--                margin-bottom: 12px;-->
+<!--                padding: 8px;-->
+<!--                background-color: #fff;-->
+<!--                box-shadow: 0 1px 4px rgba(0,0,0,0.1);-->
+<!--            }-->
+
+<!--            td {-->
+<!--                border: none;-->
+<!--                border-bottom: 1px solid #eee;-->
+<!--                padding: 8px 6px;-->
+<!--                display: flex;-->
+<!--                flex-direction: column;-->
+<!--                align-items: center;-->
+<!--                font-size: 0.9rem;-->
+<!--            }-->
+
+<!--            td:last-child {-->
+<!--                border-bottom: none;-->
+<!--            }-->
+
+<!--            td::before {-->
+<!--                content: attr(data-label);-->
+<!--                font-weight: bold;-->
+<!--                color: #54759d;-->
+<!--                margin-bottom: 4px;-->
+<!--            }-->
+
+<!--            .button-container {-->
+<!--                flex-direction: row;-->
+<!--                gap: 0.5rem;-->
+<!--            }-->
+<!--        }-->
+<!--    </style>-->
+</head>
+<body>
+<h1>Ships</h1>
+<div class="button-container">
+    <a href='http://localhost:8000'><p class="back-button">Go back to the homepage</p></a>
+</div>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+        <tr>
+            <th>Ship ID</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Active</th>
+            <th>Ship data</th>
+        </tr>
+        </thead>
+        <tbody>
+        %s
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
