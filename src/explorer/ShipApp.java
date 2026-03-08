@@ -24,6 +24,7 @@ public class ShipApp {
 	private int portOS;
 	private String name;
 	private String typ;
+	private String shipID;
 	private Vec2D sector;
 	private Vec2D direction;
 	private JSONObject jsonObject;
@@ -88,6 +89,8 @@ public class ShipApp {
 			toOceanServer = new Socket(hostNameOS, portOS);
 			oceanListener = new OceanListener();
 			oceanListener.start();
+			this.hostNameOS = hostNameOS;
+			this.portOS = portOS;
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -102,7 +105,8 @@ public class ShipApp {
 				oceanListener.out.println(jsonObject);
 				break;
 			case "launched":
-				System.out.printf("Launched: %s, ", jsonObject.get("id").toString());
+				this.shipID = jsonObject.get("id").toString();
+				System.out.printf("Launched: %s, ", this.shipID);
 				//				notify();
 				break;
 			case "message":
