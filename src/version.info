@@ -1,3 +1,11 @@
+Version 1.4:
+oceanserver 0.96
+- verbose ueber oceanserver.conf setzbar
+- Bugfix: korrekte Sektorkoordinaten bei CmdCrash
+- Bugfix: Auch ohne CmdExit werden beim Verbindungsabbruch Schiffe entfernt
+- Beim Starten von oceanserver.jar (bzw. oceanstarter.jar) kann als Argument "-autostart" angegeben werden. 
+  Der OceanServer startet automatisch mit den Defaultwerten aus Maske bzw. "oceanserver.conf".
+
 Version 1.3:
 oceanserver 0.95
 - Bugfix: Radarabfragen auch bei Sektorkoordinaten [x,99] oder [99,y] moeglich
