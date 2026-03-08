@@ -1,9 +1,6 @@
 package explorer;
 
-import ocean.Course;
-import ocean.RadarEcho;
-import ocean.Rudder;
-import ocean.Vec2D;
+import ocean.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -12,10 +9,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Scanner;
 
 public class ShipApp {
@@ -30,6 +27,8 @@ public class ShipApp {
 	private JSONObject jsonObject;
 	private OceanListener oceanListener;
 	private ArrayList<RadarEcho> echos;
+	private int submarineCounter;
+	private ArrayList<SubmarineSession> submarineSessions;
 
 	/*
 		Basis ist der aktuelle Sektor
@@ -50,6 +49,37 @@ public class ShipApp {
 		jsonObject.put("name", this.name);
 		jsonObject.put("typ", this.typ);
 	}
+
+	class SubmarineSession extends Thread {
+		private String shipID;
+		private String shipHost;
+		private int shipPort;
+		private String hostNameOS;
+		private int portOS;
+		private String submarinePath = "src/submarine.jar";
+
+		public SubmarineSession(String shipID, String shipHost, int shipPort, String hostNameOS, int portOS) {
+			this.shipID = shipID;
+			this.shipHost = shipHost;
+			this.shipPort = shipPort;
+			this.hostNameOS = hostNameOS;
+			this.portOS = portOS;
+
+			try (ServerSocket server = new ServerSocket(shipPort)) {
+
+			} catch (IOException e) {
+
+			}
+
+		}
+
+		public void dive() {
+			AppLauncher.startSubmarine(shipID, shipHost, shipPort);
+
+
+		}
+	}
+
 
 	class OceanListener extends Thread {
 		private BufferedReader in;
@@ -214,7 +244,7 @@ public class ShipApp {
 	public synchronized void radarresponse(JSONObject jsonObject) {
 		System.out.println("Response: " + jsonObject.toString());
 		JSONArray response = new JSONArray(jsonObject.getJSONArray("echos"));
-		 echos = new ArrayList<>();
+		echos = new ArrayList<>();
 
 		for (int i = 0; i < response.length(); i++) {
 			RadarEcho re = RadarEcho.fromJson(response.getJSONObject(i));
