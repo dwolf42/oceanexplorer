@@ -9,7 +9,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,7 +27,7 @@ public class ShipApp {
 	private OceanListener oceanListener;
 	private ArrayList<RadarEcho> echos;
 	private int submarineCounter;
-	private ArrayList<SubmarineSession> submarineSessions;
+	private SubmarineServer submarineServer;
 
 	/*
 		Basis ist der aktuelle Sektor
@@ -49,37 +48,6 @@ public class ShipApp {
 		jsonObject.put("name", this.name);
 		jsonObject.put("typ", this.typ);
 	}
-
-	class SubmarineSession extends Thread {
-		private String shipID;
-		private String shipHost;
-		private int shipPort;
-		private String hostNameOS;
-		private int portOS;
-		private String submarinePath = "src/submarine.jar";
-
-		public SubmarineSession(String shipID, String shipHost, int shipPort, String hostNameOS, int portOS) {
-			this.shipID = shipID;
-			this.shipHost = shipHost;
-			this.shipPort = shipPort;
-			this.hostNameOS = hostNameOS;
-			this.portOS = portOS;
-
-			try (ServerSocket server = new ServerSocket(shipPort)) {
-
-			} catch (IOException e) {
-
-			}
-
-		}
-
-		public void dive() {
-			AppLauncher.startSubmarine(shipID, shipHost, shipPort);
-
-
-		}
-	}
-
 
 	class OceanListener extends Thread {
 		private BufferedReader in;
@@ -107,20 +75,26 @@ public class ShipApp {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
+				// -
 			}
 		}
 	}
 
+	public void sub() {
+		AppLauncher.startSubmarine("src/", shipID, "127.0.0.1", 8152 , hostNameOS, portOS);
+	}
+
 	// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
 
-	public synchronized boolean connectOS(String hostNameOS, int portOS) {
+	public boolean connectOS(String hostNameOS, int portOS) {
 		try {
 			toOceanServer = new Socket(hostNameOS, portOS);
 			oceanListener = new OceanListener();
 			oceanListener.start();
 			this.hostNameOS = hostNameOS;
 			this.portOS = portOS;
+			submarineServer = new SubmarineServer();
+			submarineServer.start();
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -137,7 +111,6 @@ public class ShipApp {
 			case "launched":
 				this.shipID = jsonObject.get("id").toString();
 				System.out.printf("Launched: %s, ", this.shipID);
-				//				notify();
 				break;
 			case "message":
 				message(jsonObject);
@@ -156,10 +129,10 @@ public class ShipApp {
 			default:
 				System.out.println("Unknown Command: " + cmd);
 		}
-		notify();
+		notifyAll();
 	}
 
-	public synchronized void launch() throws InterruptedException {
+	public void launch() throws InterruptedException {
 		this.sector = new Vec2D(2, 5);
 		this.direction = new Vec2D(-1, 1);
 
@@ -167,26 +140,23 @@ public class ShipApp {
 		jsonObject.put("sector", this.sector.toJson());
 		jsonObject.put("dir", this.direction.toJson());
 		handleMessage(jsonObject);
-		wait();
 	}
 
-	public synchronized void message(JSONObject jsonObject) {
+	public void message(JSONObject jsonObject) {
 		System.out.println("Message: " + jsonObject.toString());
-		notify();
 	}
 
-	public synchronized void move2d(JSONObject jsonObject) {
+	public void move2d(JSONObject jsonObject) {
 		this.sector = Vec2D.fromJson(jsonObject.getJSONObject("sector"));
 		this.direction = Vec2D.fromJson(jsonObject.getJSONObject("dir"));
 		jsonObject.put("sector", this.sector.toJson());
 		jsonObject.put("dir", this.direction.toJson());
 		System.out.printf("Current position: %s, ", this.sector.toString());
 		System.out.printf("Current direction: %s\n", this.direction.toString());
-		notify();
 	}
 
 	// Rudder rudder, Course course
-	public synchronized void navigate() throws InterruptedException {
+	public void navigate() throws InterruptedException {
 		Scanner scanner = new Scanner(System.in);
 
 		JSONObject nav = new JSONObject();
@@ -212,17 +182,14 @@ public class ShipApp {
 		scanner.skip("\n");
 
 		oceanListener.out.println(nav);
-		wait();
 	}
 
-	public synchronized void scan() throws InterruptedException {
+	public void scan() throws InterruptedException {
 		oceanListener.out.println(new JSONObject().put("cmd", "scan"));
-		wait();
 	}
 
-	public synchronized void radar() throws InterruptedException {
+	public void radar() throws InterruptedException {
 		oceanListener.out.println(new JSONObject().put("cmd", "radar"));
-		wait();
 	}
 
 	/*
@@ -241,7 +208,7 @@ public class ShipApp {
 	  "cmd":"radarresponse","id":"#0#The Ship"}
 	 */
 
-	public synchronized void radarresponse(JSONObject jsonObject) {
+	public void radarresponse(JSONObject jsonObject) {
 		System.out.println("Response: " + jsonObject.toString());
 		JSONArray response = new JSONArray(jsonObject.getJSONArray("echos"));
 		echos = new ArrayList<>();
@@ -254,19 +221,20 @@ public class ShipApp {
 		System.out.println(" ");
 		System.out.println(Arrays.toString(echos.toArray()));
 
-		notify();
 	}
 
-	public synchronized void updateSector(Vec2D sector) {
+	public void updateSector(Vec2D sector) {
 		// do something ~
 	}
 
-	public synchronized void updatePosition(Vec2D position) {
+	public void updatePosition(Vec2D position) {
 		// do something ~
 	}
 
 	public void exit() {
 		oceanListener.out.println(new JSONObject().put("cmd", "exit"));
+		submarineServer.interrupt();
+		oceanListener.interrupt();
 		Thread.currentThread().interrupt();
 	}
 }
