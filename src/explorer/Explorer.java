@@ -1,6 +1,6 @@
 package explorer;
 
-import java.util.Scanner;
+import explorer.view.ShipGui;
 
 public class Explorer {
 

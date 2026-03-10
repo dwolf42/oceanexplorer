@@ -30,6 +30,7 @@ public class ShipApp extends Frame {
 	private OceanListener oceanListener;
 	private ArrayList<RadarEcho> echos;
 	private SubmarineServer submarineServer;
+	private boolean isDirectionForward = true;
 
 	/*
 		Ship Directons
