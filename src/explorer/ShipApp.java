@@ -16,8 +16,10 @@ import java.util.Scanner;
 
 public class ShipApp {
 	private Socket toOceanServer;
-	private String hostNameOS;
-	private int portOS;
+	private String oceanServerHost;
+	private int oceanServerPortForSubmarines;
+	private int submarineServerPort;
+	private String submarineServerHost;
 	private String name;
 	private String typ;
 	private String shipID;
@@ -43,6 +45,10 @@ public class ShipApp {
 	public ShipApp(String name, String typ) {
 		this.name = name;
 		this.typ = typ;
+
+		this.oceanServerPortForSubmarines = 8151;
+		this.submarineServerPort = 8152;
+		this.submarineServerHost = "127.0.0.1";
 
 		jsonObject = new JSONObject();
 		jsonObject.put("name", this.name);
@@ -81,7 +87,7 @@ public class ShipApp {
 	}
 
 	public void sub() {
-		AppLauncher.startSubmarine("src/", shipID, "127.0.0.1", 8152 , hostNameOS, portOS);
+		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
 	}
 
 	// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
@@ -91,8 +97,7 @@ public class ShipApp {
 			toOceanServer = new Socket(hostNameOS, portOS);
 			oceanListener = new OceanListener();
 			oceanListener.start();
-			this.hostNameOS = hostNameOS;
-			this.portOS = portOS;
+			this.oceanServerHost = hostNameOS;
 			submarineServer = new SubmarineServer();
 			submarineServer.start();
 			return true;
