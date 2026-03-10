@@ -28,7 +28,6 @@ public class ShipApp {
 	private JSONObject jsonObject;
 	private OceanListener oceanListener;
 	private ArrayList<RadarEcho> echos;
-	private int submarineCounter;
 	private SubmarineServer submarineServer;
 
 	/*
@@ -86,7 +85,7 @@ public class ShipApp {
 		}
 	}
 
-	public void sub() {
+	public void deploySubmarine() {
 		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
 	}
 
@@ -167,7 +166,6 @@ public class ShipApp {
 		JSONObject nav = new JSONObject();
 		nav.put("cmd", "navigate");
 
-		// TODO: Current position should be translated to compass directions
 		System.out.printf("Current position: %s, ", this.sector.toString());
 		System.out.printf("Current direction: %s\n", this.direction.toString());
 		System.out.println("Set rudder Left | Center | Right:");

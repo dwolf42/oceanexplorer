@@ -45,7 +45,26 @@ public class Submarine extends Thread {
 
 	public void handleMessage(JSONObject jsonObject) throws InterruptedException {
 		String cmd = jsonObject.get("cmd").toString();
-		System.out.println("Submarine: " + jsonObject.toString());
+		switch (cmd) {
+			case "ready":
+				System.out.println("Ready Message: " + jsonObject);
+				break;
+			case "message":
+				System.out.println("Message Message: " + jsonObject);
+				break;
+			case "measure":
+				System.out.println("Measure Message: " + jsonObject);
+				break;
+			case "crash":
+				System.out.println("Crash Message: " + jsonObject);
+				break;
+			case "arise":
+			System.out.println("Arise Message: " + jsonObject);
+			exit();
+				break;
+			default:
+				System.out.println("Unknown Command: " + cmd);
+		}
 	}
 
 	public void exit() {
@@ -53,6 +72,7 @@ public class Submarine extends Thread {
 			out.close();
 			in.close();
 			connection.close();
+			this.interrupt();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

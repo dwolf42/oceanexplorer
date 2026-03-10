@@ -18,28 +18,21 @@ import java.util.Map;
 
 class SubmarineServer extends Thread {
 	private ServerSocket subSocket;
-	List<Submarine>  submarines = new ArrayList<>();
+	private List<Submarine> submarines = new ArrayList<>();
 
 	public void run() {
 		try {
 			subSocket = new ServerSocket(8152);
-			subSocket.setSoTimeout(2000);
 
 			while (!isInterrupted()) {
-
-				try {
 					Socket client = subSocket.accept();
 					Submarine submarine = new Submarine(client);
 					submarine.start();
-					submarines.add(submarine);
-				} catch (SocketTimeoutException e) {
-					//
-				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			// iterates through all submarines and calls interrupt
+			// After thread ends, this iterates through the submarines array list so they are interrupt properly
 			submarines.forEach(Submarine::interrupt);
 			if (subSocket != null) {
 				try {
@@ -50,4 +43,5 @@ class SubmarineServer extends Thread {
 			}
 		}
 	}
+
 }
