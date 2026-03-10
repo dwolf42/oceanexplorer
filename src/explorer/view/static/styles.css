@@ -1,128 +1,128 @@
  * {
-        box-sizing: border-box;
-    }
+    box-sizing: border-box;
+}
 
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+h1 {
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    margin-bottom: 1rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #54759d;
+    color: white;
+    white-space: nowrap;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+a {
+    text-decoration: none;
+    height: fit-content;
+    width: fit-content;
+}
+
+a:focus,
+a:active {
+    color: black;
+}
+
+.back-button,
+.homepage-back-button {
+    color: black;
+    padding: 1rem;
+    background-color: beige;
+    border: 2px solid beige;
+    border-radius: 1rem;
+    display: inline-block;
+    margin: 0;
+}
+
+.button-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media screen and (max-width: 600px) {
     body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-    }
-
-    h1 {
-        font-size: clamp(1.2rem, 4vw, 2rem);
-        margin-bottom: 1rem;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th, td {
-        padding: 10px;
-        text-align: left;
-        border: 1px solid #ddd;
-    }
-
-    th {
-        background-color: #54759d;
-        color: white;
-        white-space: nowrap;
-    }
-
-    tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-
-    a {
-        text-decoration: none;
-        height: fit-content;
-        width: fit-content;
-    }
-
-    a:focus,
-    a:active {
-        color: black;
+        margin: 10px;
     }
 
     .back-button,
     .homepage-back-button {
-        color: black;
-        padding: 1rem;
-        background-color: beige;
-        border: 2px solid beige;
-        border-radius: 1rem;
-        display: inline-block;
-        margin: 0;
+        padding: 0.7rem 0.9rem;
+        font-size: 0.85rem;
     }
 
     .button-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
+        flex-direction: row;
+        justify-content: center;
     }
 
     .table-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        overflow-x: visible;
     }
 
-    @media screen and (max-width: 600px) {
-        body {
-            margin: 10px;
-        }
-
-        .back-button,
-        .homepage-back-button {
-            padding: 0.7rem 0.9rem;
-            font-size: 0.85rem;
-        }
-
-        .button-container {
-            flex-direction: row;
-            justify-content: center;
-        }
-
-        .table-wrapper {
-            overflow-x: visible;
-        }
-
-        table, thead, tbody, th, td, tr {
-            display: block;
-        }
-
-        thead tr {
-            display: none;
-        }
-
-        tr {
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            padding: 8px;
-            background-color: #fff;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        }
-
-        td {
-            border: none;
-            border-bottom: 1px solid #eee;
-            padding: 8px 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        td:last-child {
-            border-bottom: none;
-        }
-
-        td::before {
-            content: attr(data-label);
-            font-weight: bold;
-            color: #54759d;
-            margin-bottom: 4px;
-        }
+    table, thead, tbody, th, td, tr {
+        display: block;
     }
+
+    thead tr {
+        display: none;
+    }
+
+    tr {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 8px;
+        background-color: #fff;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        padding: 8px 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    td:last-child {
+        border-bottom: none;
+    }
+
+    td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        color: #54759d;
+        margin-bottom: 4px;
+    }
+}

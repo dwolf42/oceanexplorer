@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class Database {
+public class Database {
     private Connection conn;
     private Statement statement;
     private PreparedStatement stmt;
@@ -23,7 +23,7 @@ public final class Database {
         return DriverManager.getConnection(DB_URL, USER, PASS);
     }
 
-    public List<Map<String, Object>> getAllShips() throws SQLException {
+    public synchronized List<Map<String, Object>> getAllShips() throws SQLException {
         List<Map<String, Object>> ships = new ArrayList<>();
         String sql = "SELECT * FROM ship";
 
@@ -45,7 +45,7 @@ public final class Database {
         return ships;
     }
 
-    public List<Map<String, Object>> getAllSectors() throws SQLException {
+    public synchronized List<Map<String, Object>> getAllSectors() throws SQLException {
         List<Map<String, Object>> sectors = new ArrayList<>();
         String sql = "SELECT * FROM sector";
 
@@ -66,7 +66,7 @@ public final class Database {
         return sectors;
     }
 
-    public List<Map<String, Object>> getShipScanData(int identifier) throws SQLException {
+    public synchronized List<Map<String, Object>> getShipScanData(int identifier) throws SQLException {
         List<Map<String, Object>> shipScanData = new ArrayList<>();
         String sql = "SELECT * FROM ship_scan_results WHERE shipID = ? ";
 
@@ -99,7 +99,7 @@ public final class Database {
         return shipScanData;
     }
 
-    public List<Map<String, Object>> getAllSectorData() throws SQLException {
+    public synchronized List<Map<String, Object>> getAllSectorData() throws SQLException {
         List<Map<String, Object>> sectors = getAllSectors();
         List<Map<String, Object>> allSectorData = new ArrayList<>();
 
@@ -117,7 +117,7 @@ public final class Database {
         return allSectorData;
     }
 
-    private Map<String, Object> getScanResultsForSector(int sectorID) throws SQLException {
+    private synchronized Map<String, Object> getScanResultsForSector(int sectorID) throws SQLException {
         Map<String, Object> result = new HashMap<>();
         String sql = """
         SELECT sr.total_depth_average, sr.standard_deviation
@@ -144,7 +144,7 @@ public final class Database {
         return result;
     }
 
-    private Map<String, Object> getRadarResultsForSector(int sectorID) throws SQLException {
+    private synchronized Map<String, Object> getRadarResultsForSector(int sectorID) throws SQLException {
         Map<String, Object> result = new HashMap<>();
         String sql = """
         SELECT rr.height, rr.ground, rr.navigable
@@ -172,7 +172,7 @@ public final class Database {
         return result;
     }
 
-    public List<Map<String, Object>> getSubmarineMeasurementsForSector(int sectorID) throws SQLException {
+    public synchronized List<Map<String, Object>> getSubmarineMeasurementsForSector(int sectorID) throws SQLException {
         List<Map<String, Object>> result = new ArrayList<>();
         String sql = "SELECT submarineID, vec_x, vec_y, vec_z FROM submarine_measurements WHERE sectorID = ?";
 
@@ -197,7 +197,7 @@ public final class Database {
         return result;
     }
 
-    public List<Map<String, Object>> getShipRadarData(String shipID) throws SQLException {
+    public synchronized List<Map<String, Object>> getShipRadarData(String shipID) throws SQLException {
         List<Map<String, Object>> shipRadarData = new ArrayList<>();
         String sql = "SELECT * FROM ship_radar_results WHERE shipID = ?";
 
@@ -229,7 +229,7 @@ public final class Database {
         return shipRadarData;
     }
 
-    public List<Map<String, Object>> getAllSubmarineData() throws SQLException {
+    public synchronized List<Map<String, Object>> getAllSubmarineData() throws SQLException {
         List<Map<String, Object>> submarines = new ArrayList<>();
         String sql = "SELECT s.submarineID, ship.`name` AS ship_name," +
                 "ssp.position_x AS sink_position_x, ssp.position_y AS sink_position_y, ssp.position_z AS sink_position_z," +
