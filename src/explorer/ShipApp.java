@@ -87,6 +87,7 @@ public class ShipApp {
 	}
 
 	public void sub() {
+		// TODO: unite sub deployment with sub classes
 		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
 	}
 

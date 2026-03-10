@@ -45,7 +45,32 @@ public class Submarine extends Thread {
 
 	public void handleMessage(JSONObject jsonObject) throws InterruptedException {
 		String cmd = jsonObject.get("cmd").toString();
-		System.out.println("Submarine: " + jsonObject.toString());
+		switch (cmd) {
+			case "ready":
+				System.out.println("Arise Message: " + jsonObject);
+				// oceanListener.out.println(jsonObject);
+				break;
+			case "message":
+			//	this.shipID = jsonObject.get("id").toString();
+			//	System.out.printf("Launched: %s, ", this.shipID);
+				break;
+			case "measure":
+				System.out.println("Measure Message: " + jsonObject);
+			//	message(jsonObject);
+				break;
+			// case "picture"
+			case "crash":
+			//	move2d(jsonObject);
+				break;
+			//	case "crash" -> crash();
+			//{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
+			case "arise":
+			System.out.println("Arise Message: " + jsonObject);
+			exit();
+				break;
+			default:
+				System.out.println("Unknown Command: " + cmd);
+		}
 	}
 
 	public void exit() {
