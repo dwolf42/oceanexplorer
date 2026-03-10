@@ -47,23 +47,17 @@ public class Submarine extends Thread {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
 			case "ready":
-				System.out.println("Arise Message: " + jsonObject);
-				// oceanListener.out.println(jsonObject);
+				System.out.println("Ready Message: " + jsonObject);
 				break;
 			case "message":
-			//	this.shipID = jsonObject.get("id").toString();
-			//	System.out.printf("Launched: %s, ", this.shipID);
+				System.out.println("Message Message: " + jsonObject);
 				break;
 			case "measure":
 				System.out.println("Measure Message: " + jsonObject);
-			//	message(jsonObject);
 				break;
-			// case "picture"
 			case "crash":
-			//	move2d(jsonObject);
+				System.out.println("Crash Message: " + jsonObject);
 				break;
-			//	case "crash" -> crash();
-			//{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
 			case "arise":
 			System.out.println("Arise Message: " + jsonObject);
 			exit();
@@ -78,6 +72,7 @@ public class Submarine extends Thread {
 			out.close();
 			in.close();
 			connection.close();
+			this.interrupt();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

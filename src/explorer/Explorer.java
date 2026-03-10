@@ -1,7 +1,6 @@
 package explorer;
 
 import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Explorer {
 	private boolean isExploring = true;
@@ -52,7 +51,7 @@ public class Explorer {
 						shipApp.wait();
 						break;
 					case "sub":
-						shipApp.sub();
+						shipApp.deploySubmarine();
 						break;
 					case "exit":
 						isExploring = false;
