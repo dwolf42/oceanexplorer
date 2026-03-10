@@ -5,6 +5,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
-public class ShipApp {
+public class ShipApp extends Frame {
 	private Socket toOceanServer;
 	private String oceanServerHost;
 	private int oceanServerPortForSubmarines;
@@ -31,11 +32,7 @@ public class ShipApp {
 	private SubmarineServer submarineServer;
 
 	/*
-		Basis ist der aktuelle Sektor
-		Die Ziel-Himmelsrichtung bestimmt die Operation, die auf den derzeitigen Sektor angewandt wird.
-		Das Ergebnis ist der Sektor. Dieser wird verwendet, um aus der Echos-Liste die Information über
-		den Ground-Zustand am Zielort zu erhalten
-
+		Ship Directons
 		nw = -1, 1     n = 0, 1     ne = 1, 1
 		w = -1, 0					e = 1, 0
 		sw = -1, -1	   s = 0, -1	se = 1, -1
@@ -52,6 +49,9 @@ public class ShipApp {
 		jsonObject = new JSONObject();
 		jsonObject.put("name", this.name);
 		jsonObject.put("typ", this.typ);
+
+		Frame frame = new Frame("name");
+		frame.setLayout(new GridLayout(1, 1));
 	}
 
 	class OceanListener extends Thread {
@@ -168,7 +168,7 @@ public class ShipApp {
 
 		System.out.printf("Current position: %s, ", this.sector.toString());
 		System.out.printf("Current direction: %s\n", this.direction.toString());
-		System.out.println("Set rudder Left | Center | Right:");
+		System.out.println("Set rudder Left = 0 | Center = 1 | Right = 2:");
 		// To adjust the rudder without string operations, an array is created from the available enums.
 		// The corresponding rudder-alignment is then used based on the index.
 		Rudder[] rudders = Rudder.values();
@@ -195,22 +195,6 @@ public class ShipApp {
 		oceanListener.out.println(new JSONObject().put("cmd", "radar"));
 	}
 
-	/*
-
-	Current position: (vec2: 3,3), Current direction: (1,1)
-
-	Response: {"echos":
-	[ {"ground":"Water","sector":{"vec2":[2,3]},"height":0},
-	  {"ground":"Water","sector":{"vec2":[2,4]},"height":0},
-	  {"ground":"Water","sector":{"vec2":[3,4]},"height":0},
-	  {"ground":"Water","sector":{"vec2":[4,4]},"height":0},
-	  {"ground":"Water","sector":{"vec2":[4,3]},"height":0},
-	  {"ground":"Water","sector":{"vec2":[4,2]},"height":0},
-	  {"ground":"Water","sector":{"vec2":[3,2]},"height":0},
-	  {"ground":"Water","sector":{"vec2":[2,2]},"height":0}],
-	  "cmd":"radarresponse","id":"#0#The Ship"}
-	 */
-
 	public void radarresponse(JSONObject jsonObject) {
 		System.out.println("Response: " + jsonObject.toString());
 		JSONArray response = new JSONArray(jsonObject.getJSONArray("echos"));
@@ -223,15 +207,6 @@ public class ShipApp {
 
 		System.out.println(" ");
 		System.out.println(Arrays.toString(echos.toArray()));
-
-	}
-
-	public void updateSector(Vec2D sector) {
-		// do something ~
-	}
-
-	public void updatePosition(Vec2D position) {
-		// do something ~
 	}
 
 	public void exit() {
@@ -239,5 +214,9 @@ public class ShipApp {
 		submarineServer.interrupt();
 		oceanListener.interrupt();
 		Thread.currentThread().interrupt();
+	}
+
+	public String getShipId() {
+		return this.shipID;
 	}
 }
