@@ -1,5 +1,6 @@
 package explorer;
 
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Explorer {
@@ -11,10 +12,12 @@ public class Explorer {
 			exp.explore();
 		} catch (InterruptedException e) {
 			// -
-		}
-	}
+		} catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
-	public void explore() throws InterruptedException {
+	public void explore() throws InterruptedException, SQLException {
 		ShipApp shipApp = new ShipApp("The Ship", "ship");
 
 		synchronized (shipApp) {

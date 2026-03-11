@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -23,12 +24,14 @@ public class ShipApp {
 	private String name;
 	private String typ;
 	private String shipID;
+    private int shipDatabaseIdentifier;
 	private Vec2D sector;
 	private Vec2D direction;
 	private JSONObject jsonObject;
 	private OceanListener oceanListener;
 	private ArrayList<RadarEcho> echos;
 	private SubmarineServer submarineServer;
+    private Database database = new Database();
 
 	/*
 		Basis ist der aktuelle Sektor
@@ -41,7 +44,7 @@ public class ShipApp {
 		sw = -1, -1	   s = 0, -1	se = 1, -1
 	 */
 
-	public ShipApp(String name, String typ) {
+	public ShipApp(String name, String typ) throws SQLException {
 		this.name = name;
 		this.typ = typ;
 
@@ -79,7 +82,7 @@ public class ShipApp {
 				System.out.println("OceanListener thread exiting");
 			} catch (IOException e) {
 				e.printStackTrace();
-			} catch (InterruptedException e) {
+			} catch (InterruptedException | SQLException e) {
 				// -
 			}
 		}
@@ -106,27 +109,37 @@ public class ShipApp {
 		}
 	}
 
-	public synchronized void handleMessage(JSONObject jsonObject) throws InterruptedException {
+	public synchronized void handleMessage(JSONObject jsonObject) throws InterruptedException, SQLException {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
 			case "launch":
 				oceanListener.out.println(jsonObject);
 				break;
-			case "launched":
-				this.shipID = jsonObject.get("id").toString();
-				System.out.printf("Launched: %s, ", this.shipID);
-				break;
-			case "message":
-				message(jsonObject);
-				break;
-			case "move2d":
-				move2d(jsonObject);
-				break;
-			//	case "crash" -> crash();
-			//{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
-			case "scanned":
-				System.out.println("Scan Result: " + jsonObject.toString());
-				break;
+            case "launched":
+                this.shipID = jsonObject.get("id").toString();
+                System.out.printf("Launched: %s, ", this.shipID);
+
+                String shipName = shipID.split("#")[2];
+                this.shipDatabaseIdentifier = database.insertShipData(shipID, shipName);
+
+                break;
+            case "message":
+                message(jsonObject);
+                break;
+            case "move2d":
+                move2d(jsonObject);
+                break;
+            //	case "crash" -> crash();
+            //{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
+            case "scanned":
+                System.out.println("Scan Result: " + jsonObject);
+
+                int totalDepthAverage = jsonObject.getInt("depth");
+                String shipID = jsonObject.getString("id");
+                float standardDeviation = jsonObject.getFloat("stddev");
+
+                database.insertShipScanData(totalDepthAverage, standardDeviation, sector, this.shipDatabaseIdentifier);
+                break;
 			case "radarresponse":
 				radarresponse(jsonObject);
 				break;
@@ -136,7 +149,7 @@ public class ShipApp {
 		notifyAll();
 	}
 
-	public void launch() throws InterruptedException {
+	public void launch() throws InterruptedException, SQLException {
 		this.sector = new Vec2D(2, 5);
 		this.direction = new Vec2D(-1, 1);
 
