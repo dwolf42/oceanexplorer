@@ -161,7 +161,7 @@ public class ShipApp extends Frame {
 	}
 
 	// Rudder rudder, Course course
-	public void navigate() throws InterruptedException {
+	public void navigate(int rudderDirection) {
 		Scanner scanner = new Scanner(System.in);
 
 		JSONObject nav = new JSONObject();
@@ -188,11 +188,11 @@ public class ShipApp extends Frame {
 		oceanListener.out.println(nav);
 	}
 
-	public void scan() throws InterruptedException {
+	public void scan() {
 		oceanListener.out.println(new JSONObject().put("cmd", "scan"));
 	}
 
-	public void radar() throws InterruptedException {
+	public void radar() {
 		oceanListener.out.println(new JSONObject().put("cmd", "radar"));
 	}
 
@@ -219,5 +219,9 @@ public class ShipApp extends Frame {
 
 	public String getShipId() {
 		return this.shipID;
+	}
+
+	public void setIsDirectionForward(boolean isDirectionForward) {
+		this.isDirectionForward = isDirectionForward;
 	}
 }
