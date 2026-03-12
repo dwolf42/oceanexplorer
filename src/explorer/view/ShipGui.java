@@ -16,7 +16,7 @@ public class ShipGui {
 		this.shipApp = shipApp;
 		// Create window
 		Frame win = new Frame(shipApp.getShipId());
-		win.setLayout(new GridLayout(3, 3));
+		win.setLayout(new GridLayout(0, 3));
 		// Set window size
 		win.setSize(300, 200);
 
@@ -26,11 +26,8 @@ public class ShipGui {
 			win.add(button);
 		}
 
-
-
 		// Make window and buttons visible
 		win.setVisible(true);
-
 
 	}
 

@@ -12,7 +12,6 @@ public class ButtonFactory extends Button {
 		ArrayList<Button> buttons = new ArrayList<>();
 
 		Button left = new Button("left");
-		left.setSize(20, 20);
 		left.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -23,7 +22,6 @@ public class ButtonFactory extends Button {
 
 
 		Button center = new Button("center");
-		center.setSize(20, 20);
 		center.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -33,7 +31,6 @@ public class ButtonFactory extends Button {
 		buttons.add(center);
 
 		Button right = new Button("right");
-		right.setSize(20, 20);
 		center.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -43,7 +40,6 @@ public class ButtonFactory extends Button {
 		buttons.add(right);
 
 		Button submarine = new Button("drop submarine");
-		submarine.setSize(20, 20);
 		submarine.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
