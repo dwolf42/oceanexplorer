@@ -19,6 +19,11 @@ import java.util.Map;
 class SubmarineServer extends Thread {
 	private ServerSocket subSocket;
 	private List<Submarine> submarines = new ArrayList<>();
+	private boolean nextIsTorpedo = false;
+
+	public void setNextIsTorpedo(boolean nextIsTorpedo) {
+		this.nextIsTorpedo = nextIsTorpedo;
+	}
 
 	public void run() {
 		try {
@@ -26,7 +31,8 @@ class SubmarineServer extends Thread {
 
 			while (!isInterrupted()) {
 					Socket client = subSocket.accept();
-					Submarine submarine = new Submarine(client);
+					Submarine submarine = new Submarine(client, this.nextIsTorpedo);
+					this.nextIsTorpedo = false;
 					submarine.start();
 					submarines.add(submarine);
 			}

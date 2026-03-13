@@ -204,4 +204,9 @@ public class ShipApp {
 		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
 	}
 
+	public void launchTorpedo() {
+		submarineServer.setNextIsTorpedo(true);
+		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
+	}
+
 }

@@ -104,6 +104,16 @@ public class ButtonFactory {
 		});
 		buttons.add(bSub);
 
+		Button bTorpedo = new Button("LAUNCH TORPEDO");
+		bTorpedo.setForeground(new Color(255, 0 , 0));
+		bTorpedo.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				shipApp.launchTorpedo();
+			}
+		});
+		buttons.add(bTorpedo);
+
 		return buttons;
 
 	}
