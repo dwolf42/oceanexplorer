@@ -86,8 +86,6 @@ public class ButtonFactory extends Button {
 		});
 		buttons.add(bS);
 
-		Button bMis = new Button("LAUNCH MISSILE");
-		bMis.addActionListener(new ActionListener() {
 		Button bSE = new Button("SE");
 		bSE.addActionListener(new ActionListener() {
 			@Override
@@ -97,8 +95,16 @@ public class ButtonFactory extends Button {
 		});
 		buttons.add(bSE);
 
+		Button bTor = new Button("LAUNCH TORPEDO");
+		bTor.setForeground(Color.red);
+		bTor.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent actionEvent) {}
+			public void actionPerformed(ActionEvent actionEvent) {
+				shipApp.launchTorpedo();
+			}
+		});
+		buttons.add(bTor);
+
 		Button bSub = new Button("drop submarine");
 		bSub.addActionListener(new ActionListener() {
 			@Override
