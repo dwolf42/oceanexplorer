@@ -14,7 +14,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class ShipApp extends Frame {
+public class ShipApp {
 	private Socket toOceanServer;
 	private String oceanServerHost;
 	private int oceanServerPortForSubmarines;
@@ -117,8 +117,8 @@ public class ShipApp extends Frame {
 			case "move2d":
 				move2d(jsonObject);
 				break;
-			case "crash":
-				this.hasTorpedoLaunched = false;
+//			case "crash":
+
 			//{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
 			case "scanned":
 				System.out.println("Scan Result: " + jsonObject.toString());
@@ -133,8 +133,8 @@ public class ShipApp extends Frame {
 	}
 
 	public void launch() throws InterruptedException {
-		this.sector = new Vec2D(2, 5);
-		this.direction = new Vec2D(-1, 1);
+		this.sector = new Vec2D(1, 1);
+		this.direction = new Vec2D(0, 1);
 
 		jsonObject.put("cmd", "launch");
 		jsonObject.put("sector", this.sector.toJson());
@@ -160,13 +160,8 @@ public class ShipApp extends Frame {
 		JSONObject nav = new JSONObject();
 		nav.put("cmd", "navigate");
 
-		System.out.printf("Current position: %s, ", this.sector.toString());
-		System.out.printf("Current direction: %s\n", this.direction.toString());
-		System.out.println("Set rudder Left = 0 | Center = 1 | Right = 2:");
-
 		nav.put("rudder", rudderDirection.toString());
 
-		System.out.println("Set course (Forward = 0 | Backward = 1):");
 		nav.put("course", courseDirection.toString());
 
 		oceanListener.out.println(nav);
@@ -209,17 +204,4 @@ public class ShipApp extends Frame {
 		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
 	}
 
-	private boolean hasTorpedoLaunched;
-
-	public synchronized void launchTorpedo() {
-		JSONObject goMissile = new JSONObject();
-		goMissile.put("cmd", "pilot");
-		goMissile.put("route", Route.C.toString());
-
-		while(hasTorpedoLaunched) {
-			oceanListener.out.println(goMissile);
-		}
-	}
-	
-	
 }

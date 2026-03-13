@@ -9,7 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
-public class ButtonFactory extends Button {
+public class ButtonFactory {
 	public ArrayList<Button> doMakeMeButtons(ShipApp shipApp) {
 		ArrayList<Button> buttons = new ArrayList<>();
 
@@ -32,16 +32,16 @@ public class ButtonFactory extends Button {
 		buttons.add(bN);
 
 		Button bNE = new Button("NE");
-		bN.addActionListener(new ActionListener() {
+		bNE.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
-				shipApp.navigate(Rudder.Center, Course.Forward);
+				shipApp.navigate(Rudder.Right, Course.Forward);
 			}
 		});
 		buttons.add(bNE);
 
 		Button bSC = new Button("SCAN");
-		bN.addActionListener(new ActionListener() {
+		bSC.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
 				shipApp.scan();
@@ -50,7 +50,7 @@ public class ButtonFactory extends Button {
 		buttons.add(bSC);
 
 		Button bExit = new Button("EXIT");
-		bExit.setForeground(Color.green);
+		bExit.setForeground(new Color(37, 150, 190));
 		bExit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -60,7 +60,7 @@ public class ButtonFactory extends Button {
 		buttons.add(bExit);
 
 		Button bRD = new Button("RADAR");
-		bN.addActionListener(new ActionListener() {
+		bRD.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
 				shipApp.radar();
@@ -95,17 +95,7 @@ public class ButtonFactory extends Button {
 		});
 		buttons.add(bSE);
 
-		Button bTor = new Button("LAUNCH TORPEDO");
-		bTor.setForeground(Color.red);
-		bTor.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent actionEvent) {
-				shipApp.launchTorpedo();
-			}
-		});
-		buttons.add(bTor);
-
-		Button bSub = new Button("drop submarine");
+		Button bSub = new Button("DROP SUBMARINE");
 		bSub.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
