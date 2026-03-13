@@ -117,7 +117,8 @@ public class ShipApp extends Frame {
 			case "move2d":
 				move2d(jsonObject);
 				break;
-			//	case "crash" -> crash();
+			case "crash":
+				this.hasTorpedoLaunched = false;
 			//{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
 			case "scanned":
 				System.out.println("Scan Result: " + jsonObject.toString());
@@ -204,8 +205,20 @@ public class ShipApp extends Frame {
 		return this.shipID;
 	}
 
-	public void setIsDirectionForward(boolean isDirectionForward) {
-		this.isDirectionForward = isDirectionForward;
+	public void deploySubmarine() {
+		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
+	}
+
+	private boolean hasTorpedoLaunched;
+
+	public synchronized void launchTorpedo() {
+		JSONObject goMissile = new JSONObject();
+		goMissile.put("cmd", "pilot");
+		goMissile.put("route", Route.C.toString());
+
+		while(hasTorpedoLaunched) {
+			oceanListener.out.println(goMissile);
+		}
 	}
 	
 	
