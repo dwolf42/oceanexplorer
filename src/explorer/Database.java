@@ -12,7 +12,7 @@ import java.util.Map;
 public class Database {
     private Connection conn;
     private Statement statement;
-    private PreparedStatement stmt;
+    private PreparedStatement stmt, stmt2;
 
     // Database connection parameters
     // !!!
@@ -30,7 +30,7 @@ public class Database {
         return DriverManager.getConnection(DB_URL, USER, PASS);
     }
 
-    public void insertSector(int x, int y) throws SQLException {
+    public synchronized void insertSector(int x, int y) throws SQLException {
         String sql = "INSERT IGNORE INTO sector (position_x, position_y) VALUES (?, ?)";
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setInt(1, x);
@@ -81,69 +81,75 @@ public class Database {
         stmt.setInt(1, scanResultID);
         stmt.setInt(2, sectorID);
         stmt.setInt(3, shipDatabaseIdentifier);
-        int i = stmt.executeUpdate();
+        stmt.executeUpdate();
 
         stmt.close();
     }
 
-    public void insertShipRadarData(List<RadarEcho> echos) throws SQLException {
-//        String sql = "INSERT INTO radar_results (height, ground, navigable) VALUES (?, ?, ?)";
-//        stmt = conn.prepareStatement(sql);
+    public synchronized void insertShipRadarData(int shipDatabaseIdentifier, List<RadarEcho> echos) throws SQLException {
+        String sql = "INSERT IGNORE INTO radar_results (ground, navigable, shipID, sectorID, height) " +
+                "VALUES (?, ?, ?, ?, ?)";
+        stmt2 = conn.prepareStatement(sql);
 
         for (RadarEcho echo : echos) {
-            System.out.println("--------------------------------------------");
             String ground = echo.getGround().toString();
-            String navigable = "Yes";
-            System.out.println("Ground ordinal " + echo.getGround().ordinal());
 
-            int height = echo.getHeight();
-            if(height > 0) {
-                navigable = "No";
+            if(!ground.equals("None")) {
+                String navigable = "Yes";
+
+                int height = echo.getHeight();
+                if(height > 0) {
+                    navigable = "No";
+                }
+
+                Vec2D echoSectorVec = echo.getSector();
+                int sectorID = getSectorID(echoSectorVec);
+
+                // If the sector does not exist in the sectors table (getSectorID returns 0), we insert it first
+                // Then we insert the radar result referencing this new inserted sector
+                if(sectorID == 0) {
+                    insertSector(echoSectorVec.getX(), echoSectorVec.getY());
+                    sectorID = getSectorID(echoSectorVec);
+                }
+
+                stmt2.setString(1, ground);
+                stmt2.setString(2, navigable);
+                stmt2.setInt(3, shipDatabaseIdentifier);
+                stmt2.setInt(4, sectorID);
+                stmt2.setInt(5, height);
+
+                stmt2.addBatch();
             }
-            System.out.println("Height " +height);
-            System.out.println("Ground " + ground);
-            System.out.println("Nav " + navigable);
 
-//            stmt.setInt(1, echo.getHeight());
-//            stmt.setString(2, ground);
-//            stmt.setString(3, navigable);
-
-//            stmt.addBatch();
         }
 
-//        stmt.executeBatch();
-//        stmt.close();
+        stmt2.executeBatch();
+        stmt2.close();
     }
 
-    private int getSectorID(Vec2D sector) throws SQLException {
-        int positionX = sector.getX();
-        int positionY = sector.getY();
-
-        String sql = "SELECT sectorID FROM sector WHERE position_x = ? AND position_y = ?";
-
-        stmt = conn.prepareStatement(sql);
-        stmt.setInt(1, positionX);
-        stmt.setInt(2, positionY);
-        ResultSet rs = stmt.executeQuery();
-
-        int sectorID = 0;
-
-        while (rs.next()) {
-            sectorID = rs.getInt("sectorID");
-        }
-
-        statement.close();
-        return sectorID;
+    public synchronized void insertSubmarineData(int shipDatabaseIdentifier) throws SQLException {
+        String sql = "INSERT INTO submarine (shipID) VALUES (?)";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, shipDatabaseIdentifier);
+        stmt.executeUpdate();
     }
 
-    private synchronized int getScanResultID(ResultSet rs) throws SQLException {
-        if (rs.next()) {
-            int id = rs.getInt(1);
-            return id;
-        }
-        return 0;
+    public synchronized void insertSubArisePosition(int x, int y) throws SQLException {
+        String sql = "INSERT INTO submarine_arise_position (position_x, position_y) VALUES (?, ?)";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, x);
+        stmt.setInt(2, y);
+        stmt.executeUpdate();
     }
 
+    public synchronized void insertSubSunkPosition(int x, int y, int z) throws SQLException {
+        String sql = "INSERT INTO submarine_sink_position (position_x, position_y, position_z) VALUES (?, ?, ?)";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, x);
+        stmt.setInt(2, y);
+        stmt.setInt(3, z);
+        stmt.executeUpdate();
+    }
 
     public synchronized List<Map<String, Object>> getAllShips() throws SQLException {
         List<Map<String, Object>> ships = new ArrayList<>();
@@ -268,13 +274,7 @@ public class Database {
 
     private synchronized Map<String, Object> getRadarResultsForSector(int sectorID) throws SQLException {
         Map<String, Object> result = new HashMap<>();
-        String sql = """
-        SELECT rr.height, rr.ground, rr.navigable
-        FROM radar_results rr
-        JOIN ship_radar_results shipRadarResults ON rr.radar_resultID = shipRadarResults.ship_radar_resultID
-        WHERE shipRadarResults.sectorID = ?
-        LIMIT 1
-    """;
+        String sql = "SELECT height, ground, navigable FROM radar_results WHERE sectorID = ? ORDER BY sectorID";
 
         Connection conn = getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql);
@@ -319,31 +319,33 @@ public class Database {
         return result;
     }
 
-    public synchronized List<Map<String, Object>> getShipRadarData(String shipID) throws SQLException {
+    public synchronized List<Map<String, Object>> getShipRadarData(int shipID) throws SQLException {
         List<Map<String, Object>> shipRadarData = new ArrayList<>();
-        String sql = "SELECT * FROM ship_radar_results WHERE shipID = ?";
+        String sql = "SELECT * FROM radar_results WHERE shipID = ?";
 
         conn = getConnection();
         stmt = conn.prepareStatement(sql);
-        stmt.setString(1, shipID);
+        stmt.setInt(1, shipID);
         ResultSet rs = stmt.executeQuery();
+
+        String shipName = getShipName(shipID);
 
         while (rs.next()) {
             Map<String, Object> shipData = new HashMap<>();
-            int radar_resultID = rs.getInt("radar_resultID");
             int sectorID = rs.getInt("sectorID");
-            shipData.put("sectorID", sectorID);
 
-            String sql2 = "SELECT height, ground, navigable FROM radar_results WHERE radar_resultID = ?";
-            stmt = conn.prepareStatement(sql2);
-            stmt.setInt(1, radar_resultID);
-            ResultSet rs2 = stmt.executeQuery();
+            Vec2D sectorCoordinates = getSectorCoordinates(sectorID);
 
-            while (rs2.next()) {
-                shipData.put("height", rs2.getInt("height"));
-                shipData.put("ground", rs2.getString("ground"));
-                shipData.put("navigable", rs2.getString("navigable"));
-            }
+            int sectorPosX = sectorCoordinates.getX();
+            int sectorPosY = sectorCoordinates.getY();
+
+            shipData.put("shipName", shipName);
+            shipData.put("ground", rs.getString("ground"));
+            shipData.put("height", rs.getInt("height"));
+            shipData.put("navigable", rs.getString("navigable"));
+            shipData.put("sectorPosX", sectorPosX);
+            shipData.put("sectorPosY", sectorPosY);
+
             shipRadarData.add(shipData);
         }
         conn.close();
@@ -386,27 +388,67 @@ public class Database {
         return submarines;
     }
 
-    public void insertSubmarineData(int shipDatabaseIdentifier) throws SQLException {
-        String sql = "INSERT INTO submarine (shipID) VALUES (?)";
-        PreparedStatement stmt = conn.prepareStatement(sql);
-        stmt.setInt(1, shipDatabaseIdentifier);
-        stmt.executeUpdate();
+    private synchronized String getShipName(int shipID) throws SQLException {
+        String sql = "SELECT name FROM ship WHERE shipID = ?";
+
+        stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, shipID);
+        ResultSet rs = stmt.executeQuery();
+
+        String shipName = null;
+        while (rs.next()) {
+            shipName = rs.getString("name");
+        }
+
+        stmt.close();
+        return shipName;
     }
 
-    public void insertSubArisePosition(int x, int y) throws SQLException {
-        String sql = "INSERT INTO submarine_arise_position (position_x, position_y) VALUES (?, ?)";
-        PreparedStatement stmt = conn.prepareStatement(sql);
-        stmt.setInt(1, x);
-        stmt.setInt(2, y);
-        stmt.executeUpdate();
+    private synchronized int getSectorID(Vec2D sector) throws SQLException {
+        int positionX = sector.getX();
+        int positionY = sector.getY();
+
+        String sql = "SELECT sectorID FROM sector WHERE position_x = ? AND position_y = ?";
+
+        stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, positionX);
+        stmt.setInt(2, positionY);
+        ResultSet rs = stmt.executeQuery();
+
+        int sectorID = 0;
+
+        while (rs.next()) {
+            sectorID = rs.getInt("sectorID");
+        }
+
+        stmt.close();
+        return sectorID;
     }
 
-    public void insertSubSunkPosition(int x, int y, int z) throws SQLException {
-        String sql = "INSERT INTO submarine_sink_position (position_x, position_y, position_z) VALUES (?, ?, ?)";
-        PreparedStatement stmt = conn.prepareStatement(sql);
-        stmt.setInt(1, x);
-        stmt.setInt(2, y);
-        stmt.setInt(3, z);
-        stmt.executeUpdate();
+    private synchronized int getScanResultID(ResultSet rs) throws SQLException {
+        if (rs.next()) {
+            return rs.getInt(1);
+        }
+        return 0;
+    }
+
+    private Vec2D getSectorCoordinates(int sectorID) throws SQLException {
+        String sql = "SELECT position_x, position_y FROM sector WHERE sectorID = ?";
+
+        stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, sectorID);
+        ResultSet rs = stmt.executeQuery();
+
+        int vecX = 0;
+        int vecY = 0;
+        while (rs.next()) {
+            vecX = rs.getInt("position_x");
+            vecY = rs.getInt("position_y");
+        }
+
+        Vec2D sectorCoordinates = new Vec2D(vecX, vecY);
+
+        stmt.close();
+        return sectorCoordinates;
     }
 }

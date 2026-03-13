@@ -33,7 +33,7 @@ public class WebApp {
             String path = exchange.getRequestURI().getPath();
 
             if (path.equals("/")) {
-                renderHomepage(exchange, "homepage.html");
+                renderHomepage(exchange);
             } else if (path.equals("/ships")) {
                 renderShips(exchange);
             } else if (path.equals("/sectors")) {
@@ -48,7 +48,7 @@ public class WebApp {
             }
             else if (path.contains("/radar-results") && path.contains("/ship")) {
                 String[] parts = path.split("/");
-                String shipID = parts[2];
+                int shipID = Integer.parseInt(parts[2]);
                 renderShipRadarData(exchange, shipID);
             }
             else if (path.contains("/sector") && path.contains("/submarine-measurements") ) {
@@ -80,9 +80,13 @@ public class WebApp {
         exchange.getResponseBody().close();
     }
 
-    private String getHTMLBase(String htmlTemplateName, StringBuilder rows){
+    private String getHTMLBase(String htmlTemplateName, StringBuilder rows) {
+        return getHTMLBase(htmlTemplateName, null, rows);
+    }
+
+    private String getHTMLBase(String htmlTemplateName, String shipName, StringBuilder rows) {
         StringBuilder data = new StringBuilder();
-        try(BufferedReader reader = new BufferedReader(new FileReader("src/explorer/view/templates/" + htmlTemplateName))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/explorer/view/templates/" + htmlTemplateName))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 data.append(line);
@@ -91,7 +95,13 @@ public class WebApp {
             e.printStackTrace();
         }
 
-        return data.toString().formatted(rows);
+        String template = data.toString();
+
+        if (shipName != null) {
+            return template.formatted(shipName, rows);
+        } else {
+            return template.formatted(rows);
+        }
     }
 
     private void renderSectorSubmarineMeasurements(HttpExchange exchange, int sectorID) throws SQLException, IOException {
@@ -139,11 +149,11 @@ public class WebApp {
                     sector.get("sectorID"),
                     sector.get("position_x"),
                     sector.get("position_y"),
-                    sector.getOrDefault("total_depth_average", "No Data"),
-                    sector.getOrDefault("standard_deviation", "No Data"),
-                    sector.getOrDefault("height", "No Data"),
-                    sector.getOrDefault("ground", "No Data"),
-                    sector.getOrDefault("navigable", "No Data"),
+                    sector.getOrDefault("total_depth_average", "No data available"),
+                    sector.getOrDefault("standard_deviation", "No data available"),
+                    sector.getOrDefault("height", "No data available"),
+                    sector.getOrDefault("ground", "No data available"),
+                    sector.getOrDefault("navigable", "No data available"),
                     sector.get("sectorID")
             ));
         }
@@ -152,9 +162,9 @@ public class WebApp {
         renderHTML(exchange, html);
     }
 
-    private void renderHomepage(HttpExchange exchange, String htmlTemplateName) throws SQLException, IOException {
+    private void renderHomepage(HttpExchange exchange) throws IOException {
         StringBuilder data = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader("src/explorer/view/templates/" + htmlTemplateName))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/explorer/view/templates/" + "homepage.html"))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 data.append(line);
@@ -175,26 +185,32 @@ public class WebApp {
         os.close();
     }
 
-    private void renderShipRadarData(HttpExchange exchange, String shipID) throws SQLException, IOException {
+    private void renderShipRadarData(HttpExchange exchange, int shipID) throws SQLException, IOException {
         shipsRadarData = database.getShipRadarData(shipID);
         StringBuilder rows = new StringBuilder();
+        String shipName = "";
+
         for (Map<String, Object> shipRadarData : shipsRadarData) {
+            shipName = "The name of the ship: " + shipRadarData.get("shipName");
+
             rows.append(String.format("""
             <tr>
-                <td data-label='Sector ID'>%s</td>
-                <td data-label='Height'>%s</td>
                 <td data-label='Ground'>%s</td>
+                <td data-label='Height'>%s</td>
                 <td data-label='Navigable'>%s</td>
+                <td data-label='Sector Position X'>%s</td>
+                <td data-label='Sector Position Y'>%s</td>
             </tr>
             """,
-                    shipRadarData.get("sectorID"),
-                    shipRadarData.get("height"),
                     shipRadarData.get("ground"),
-                    shipRadarData.get("navigable")
+                    shipRadarData.get("height"),
+                    shipRadarData.get("navigable"),
+                    shipRadarData.get("sectorPosX"),
+                    shipRadarData.get("sectorPosY")
             ));
         }
 
-        String html = getHTMLBase("shipRadarData.html", rows);
+        String html = getHTMLBase("shipRadarData.html", shipName, rows);
         renderHTML(exchange, html);
     }
 

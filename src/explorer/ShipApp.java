@@ -8,13 +8,10 @@ import org.json.JSONTokener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 
 public class ShipApp {
@@ -151,7 +148,7 @@ public class ShipApp {
 	}
 
 	public void launch() throws InterruptedException, SQLException {
-		this.sector = new Vec2D(1, 79);
+		this.sector = new Vec2D(60, 60);
 		this.direction = new Vec2D(0, 1);
 
 		jsonObject.put("cmd", "launch");
@@ -236,7 +233,7 @@ public class ShipApp {
 		}
 
         try {
-            database.insertShipRadarData(echos);
+            database.insertShipRadarData(this.shipDatabaseIdentifier, echos);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -249,7 +246,6 @@ public class ShipApp {
 
         String shipName = shipID.split("#")[2];
         this.shipDatabaseIdentifier = database.insertShipData(shipID, shipName);
-        System.out.println(shipDatabaseIdentifier);
     }
 
     private void insertScanResultsInDatabase(JSONObject jsonObject) throws SQLException {
