@@ -1,6 +1,8 @@
 package explorer.view;
 
 import explorer.ShipApp;
+import ocean.Course;
+import ocean.Rudder;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -11,42 +13,56 @@ public class ButtonFactory extends Button {
 	public ArrayList<Button> doMakeMeButtons(ShipApp shipApp) {
 		ArrayList<Button> buttons = new ArrayList<>();
 
-		Button left = new Button("left");
-		left.addActionListener(new ActionListener() {
+		Button bNW = new Button("NW");
+		bNW.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				shipApp.navigate(0);
+				shipApp.navigate(Rudder.Left, Course.Forward);
 			}
 		});
-		buttons.add(left);
+		buttons.add(bNW);
 
-
-		Button center = new Button("center");
-		center.addActionListener(new ActionListener() {
+		Button bN = new Button("N");
+		bN.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
-				shipApp.navigate(1);
+				shipApp.navigate(Rudder.Center, Course.Forward);
 			}
 		});
-		buttons.add(center);
+		buttons.add(bN);
 
-		Button right = new Button("right");
-		center.addActionListener(new ActionListener() {
+		Button bNE = new Button("NE");
+		bN.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
-				shipApp.navigate(2);
+				shipApp.navigate(Rudder.Center, Course.Forward);
 			}
 		});
-		buttons.add(right);
+		buttons.add(bNE);
 
-		Button submarine = new Button("drop submarine");
-		submarine.addActionListener(new ActionListener() {
+		Button bSub = new Button("drop submarine");
+		bSub.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
 				shipApp.deploySubmarine();
 			}
 		});
-		buttons.add(submarine);
+		buttons.add(bSub);
+
+		Button bExit = new Button("exit");
+		bExit.setForeground(Color.green);
+		bExit.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				shipApp.exit();
+			}
+		});
+
+		Button bMis = new Button("LAUNCH MISSILE");
+		bMis.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {}
+		});
 
 		return buttons;
 

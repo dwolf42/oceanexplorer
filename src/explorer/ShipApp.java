@@ -161,29 +161,18 @@ public class ShipApp extends Frame {
 	}
 
 	// Rudder rudder, Course course
-	public void navigate(int rudderDirection) {
-		Scanner scanner = new Scanner(System.in);
-
+	public void navigate(Rudder rudderDirection, Course courseDirection) {
 		JSONObject nav = new JSONObject();
 		nav.put("cmd", "navigate");
 
 		System.out.printf("Current position: %s, ", this.sector.toString());
 		System.out.printf("Current direction: %s\n", this.direction.toString());
 		System.out.println("Set rudder Left = 0 | Center = 1 | Right = 2:");
-		// To adjust the rudder without string operations, an array is created from the available enums.
-		// The corresponding rudder-alignment is then used based on the index.
-		Rudder[] rudders = Rudder.values();
-		int selection = scanner.nextInt();
-		nav.put("rudder", rudders[selection].toString());
-		// flushes the remaining newline character from scanner to prevent it from skipping the following scan
-		scanner.skip("\n");
+
+		nav.put("rudder", rudderDirection.toString());
 
 		System.out.println("Set course (Forward = 0 | Backward = 1):");
-		// Same procedure as for Rudder above
-		Course[] courses = Course.values();
-		selection = scanner.nextInt();
-		nav.put("course", courses[selection]);
-		scanner.skip("\n");
+		nav.put("course", courseDirection.toString());
 
 		oceanListener.out.println(nav);
 	}
