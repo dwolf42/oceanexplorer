@@ -8,11 +8,13 @@ import org.json.JSONTokener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 public class ShipApp {
@@ -100,8 +102,6 @@ public class ShipApp {
 			oceanListener = new OceanListener();
 			oceanListener.start();
 			this.oceanServerHost = hostNameOS;
-			submarineServer = new SubmarineServer();
-			submarineServer.start();
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -119,26 +119,27 @@ public class ShipApp {
                 this.shipID = jsonObject.get("id").toString();
                 System.out.printf("Launched: %s, ", this.shipID);
 
-                String shipName = shipID.split("#")[2];
-                this.shipDatabaseIdentifier = database.insertShipData(shipID, shipName);
+                insertLaunchedDataInDatabase();
 
+                submarineServer = new SubmarineServer(shipDatabaseIdentifier);
+                submarineServer.start();
                 break;
             case "message":
                 message(jsonObject);
                 break;
             case "move2d":
+                Vec2D oldValueOfSector = sector;
                 move2d(jsonObject);
+
+                if(!oldValueOfSector.equals(sector)) {
+                    database.insertSector(sector.getX(), sector.getY());
+                }
                 break;
             //	case "crash" -> crash();
             //{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
             case "scanned":
                 System.out.println("Scan Result: " + jsonObject);
-
-                int totalDepthAverage = jsonObject.getInt("depth");
-                String shipID = jsonObject.getString("id");
-                float standardDeviation = jsonObject.getFloat("stddev");
-
-                database.insertShipScanData(totalDepthAverage, standardDeviation, sector, this.shipDatabaseIdentifier);
+                insertScanResultsInDatabase(jsonObject);
                 break;
 			case "radarresponse":
 				radarresponse(jsonObject);
@@ -150,8 +151,8 @@ public class ShipApp {
 	}
 
 	public void launch() throws InterruptedException, SQLException {
-		this.sector = new Vec2D(2, 5);
-		this.direction = new Vec2D(-1, 1);
+		this.sector = new Vec2D(1, 79);
+		this.direction = new Vec2D(0, 1);
 
 		jsonObject.put("cmd", "launch");
 		jsonObject.put("sector", this.sector.toJson());
@@ -181,7 +182,7 @@ public class ShipApp {
 
 		System.out.printf("Current position: %s, ", this.sector.toString());
 		System.out.printf("Current direction: %s\n", this.direction.toString());
-		System.out.println("Set rudder Left | Center | Right:");
+		System.out.println("Set rudder Left = 0 | Center = 1 | Right = 2:");
 		// To adjust the rudder without string operations, an array is created from the available enums.
 		// The corresponding rudder-alignment is then used based on the index.
 		Rudder[] rudders = Rudder.values();
@@ -226,7 +227,7 @@ public class ShipApp {
 
 	public void radarresponse(JSONObject jsonObject) {
 		System.out.println("Response: " + jsonObject.toString());
-		JSONArray response = new JSONArray(jsonObject.getJSONArray("echos"));
+        JSONArray response = jsonObject.getJSONArray("echos");
 		echos = new ArrayList<>();
 
 		for (int i = 0; i < response.length(); i++) {
@@ -234,18 +235,30 @@ public class ShipApp {
 			echos.add(re);
 		}
 
-		System.out.println(" ");
-		System.out.println(Arrays.toString(echos.toArray()));
+        try {
+            database.insertShipRadarData(echos);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
+        System.out.println(echos);
 	}
 
-	public void updateSector(Vec2D sector) {
-		// do something ~
-	}
+    private void insertLaunchedDataInDatabase() throws SQLException {
+        database.insertSector(sector.getX(), sector.getY());
 
-	public void updatePosition(Vec2D position) {
-		// do something ~
-	}
+        String shipName = shipID.split("#")[2];
+        this.shipDatabaseIdentifier = database.insertShipData(shipID, shipName);
+        System.out.println(shipDatabaseIdentifier);
+    }
+
+    private void insertScanResultsInDatabase(JSONObject jsonObject) throws SQLException {
+        int totalDepthAverage = jsonObject.getInt("depth");
+        float standardDeviation = jsonObject.getFloat("stddev");
+
+        database.insertShipScanData(totalDepthAverage, standardDeviation, sector, this.shipDatabaseIdentifier);
+
+    }
 
 	public void exit() {
 		oceanListener.out.println(new JSONObject().put("cmd", "exit"));

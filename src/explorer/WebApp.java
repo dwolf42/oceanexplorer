@@ -206,7 +206,6 @@ public class WebApp {
                 <tr>
                     <td data-label='Ship ID'>%s</td>
                     <td data-label='Name'>%s</td>
-                    <td data-label='Type'>%s</td>
                     <td data-label='Active'>%s</td>
                     <td data-label='Ship data'>
                         <div class="button-container">
@@ -218,7 +217,6 @@ public class WebApp {
                 """,
                     ship.get("shipID"),
                     ship.get("name"),
-                    ship.get("typ"),
                     ship.get("active"),
                     ship.get("shipID"),
                     ship.get("shipID")

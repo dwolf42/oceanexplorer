@@ -1,5 +1,6 @@
 package explorer;
 
+import ocean.RadarEcho;
 import ocean.Vec2D;
 
 import java.sql.*;
@@ -29,14 +30,30 @@ public class Database {
         return DriverManager.getConnection(DB_URL, USER, PASS);
     }
 
+    public void insertSector(int x, int y) throws SQLException {
+        String sql = "INSERT IGNORE INTO sector (position_x, position_y) VALUES (?, ?)";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, x);
+        stmt.setInt(2, y);
+        stmt.executeUpdate();
+    }
+
     public synchronized int insertShipData(String shipIdentifierFromServer, String shipName) throws SQLException {
-        String sql = "INSERT INTO Ship (name, active, server_ship_id) " +
-                "VALUES ('" + shipName + "', 'Yes', '" + shipIdentifierFromServer + "')";
+        String sql = "INSERT INTO ship (name, active, server_ship_id) VALUES (?, 'Yes', ?)";
 
-        statement = conn.createStatement();
-        int shipDatabaseIdentifier = statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+        stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        stmt.setString(1, shipName);
+        stmt.setString(2, shipIdentifierFromServer);
+        stmt.executeUpdate();
 
-        statement.close();
+        int shipDatabaseIdentifier = 0;
+        try (ResultSet rs = stmt.getGeneratedKeys()) {
+            if (rs.next()) {
+                shipDatabaseIdentifier = rs.getInt(1);
+            }
+        }
+
+        stmt.close();
         return shipDatabaseIdentifier;
     }
 
@@ -67,6 +84,35 @@ public class Database {
         int i = stmt.executeUpdate();
 
         stmt.close();
+    }
+
+    public void insertShipRadarData(List<RadarEcho> echos) throws SQLException {
+//        String sql = "INSERT INTO radar_results (height, ground, navigable) VALUES (?, ?, ?)";
+//        stmt = conn.prepareStatement(sql);
+
+        for (RadarEcho echo : echos) {
+            System.out.println("--------------------------------------------");
+            String ground = echo.getGround().toString();
+            String navigable = "Yes";
+            System.out.println("Ground ordinal " + echo.getGround().ordinal());
+
+            int height = echo.getHeight();
+            if(height > 0) {
+                navigable = "No";
+            }
+            System.out.println("Height " +height);
+            System.out.println("Ground " + ground);
+            System.out.println("Nav " + navigable);
+
+//            stmt.setInt(1, echo.getHeight());
+//            stmt.setString(2, ground);
+//            stmt.setString(3, navigable);
+
+//            stmt.addBatch();
+        }
+
+//        stmt.executeBatch();
+//        stmt.close();
     }
 
     private int getSectorID(Vec2D sector) throws SQLException {
@@ -111,13 +157,13 @@ public class Database {
             Map<String, Object> ship = new HashMap<>();
             ship.put("shipID", rs.getInt("shipID"));
             ship.put("name", rs.getString("name"));
-            ship.put("typ", rs.getString("typ"));
             ship.put("active", rs.getString("active"));
             ships.add(ship);
         }
 
         conn.close();
         statement.close();
+
         return ships;
     }
 
@@ -309,7 +355,7 @@ public class Database {
         List<Map<String, Object>> submarines = new ArrayList<>();
         String sql = "SELECT s.submarineID, ship.`name` AS ship_name," +
                 "ssp.position_x AS sink_position_x, ssp.position_y AS sink_position_y, ssp.position_z AS sink_position_z," +
-                "sap.position_x AS arise_position_x, sap.position_y AS arise_position_y, sap.position_z AS arise_position_z," +
+                "sap.position_x AS arise_position_x, sap.position_y AS arise_position_y," +
                 "s.`active`, s.sunk " +
                 "FROM submarine s " +
                 "INNER JOIN `ship` ON s.shipID = ship.shipID " +
@@ -338,5 +384,29 @@ public class Database {
         conn.close();
         statement.close();
         return submarines;
+    }
+
+    public void insertSubmarineData(int shipDatabaseIdentifier) throws SQLException {
+        String sql = "INSERT INTO submarine (shipID) VALUES (?)";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, shipDatabaseIdentifier);
+        stmt.executeUpdate();
+    }
+
+    public void insertSubArisePosition(int x, int y) throws SQLException {
+        String sql = "INSERT INTO submarine_arise_position (position_x, position_y) VALUES (?, ?)";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, x);
+        stmt.setInt(2, y);
+        stmt.executeUpdate();
+    }
+
+    public void insertSubSunkPosition(int x, int y, int z) throws SQLException {
+        String sql = "INSERT INTO submarine_sink_position (position_x, position_y, position_z) VALUES (?, ?, ?)";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, x);
+        stmt.setInt(2, y);
+        stmt.setInt(3, z);
+        stmt.executeUpdate();
     }
 }
