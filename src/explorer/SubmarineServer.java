@@ -28,6 +28,7 @@ class SubmarineServer extends Thread {
 					Socket client = subSocket.accept();
 					Submarine submarine = new Submarine(client);
 					submarine.start();
+					submarines.add(submarine);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

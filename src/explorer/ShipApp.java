@@ -13,7 +13,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 
 public class ShipApp extends Frame {
 	private Socket toOceanServer;
@@ -30,7 +29,6 @@ public class ShipApp extends Frame {
 	private OceanListener oceanListener;
 	private ArrayList<RadarEcho> echos;
 	private SubmarineServer submarineServer;
-	private boolean isDirectionForward = true;
 
 	/*
 		Ship Directons
@@ -51,8 +49,7 @@ public class ShipApp extends Frame {
 		jsonObject.put("name", this.name);
 		jsonObject.put("typ", this.typ);
 
-		Frame frame = new Frame("name");
-		frame.setLayout(new GridLayout(1, 1));
+
 	}
 
 	class OceanListener extends Thread {
@@ -86,9 +83,6 @@ public class ShipApp extends Frame {
 		}
 	}
 
-	public void deploySubmarine() {
-		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
-	}
 
 	// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
 
@@ -213,4 +207,6 @@ public class ShipApp extends Frame {
 	public void setIsDirectionForward(boolean isDirectionForward) {
 		this.isDirectionForward = isDirectionForward;
 	}
+	
+	
 }
