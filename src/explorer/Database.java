@@ -35,7 +35,11 @@ public class Database {
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setInt(1, x);
         stmt.setInt(2, y);
-        stmt.executeUpdate();
+        int affectedRows = stmt.executeUpdate();
+
+        if (affectedRows == 0) {
+            System.out.println("Insert skipped");
+        }
     }
 
     public synchronized int insertShipData(String shipIdentifierFromServer, String shipName) throws SQLException {
@@ -120,35 +124,100 @@ public class Database {
 
                 stmt2.addBatch();
             }
-
         }
 
         stmt2.executeBatch();
         stmt2.close();
     }
 
-    public synchronized void insertSubmarineData(int shipDatabaseIdentifier) throws SQLException {
-        String sql = "INSERT INTO submarine (shipID) VALUES (?)";
-        PreparedStatement stmt = conn.prepareStatement(sql);
+    public synchronized int insertSubmarineData(int shipDatabaseIdentifier, String serverSubID) throws SQLException {
+        String sql = "INSERT INTO submarine (shipID, server_sub_id) VALUES (?,?)";
+        stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
         stmt.setInt(1, shipDatabaseIdentifier);
-        stmt.executeUpdate();
+        stmt.setString(2, serverSubID);
+
+        int affectedRows = stmt.executeUpdate();
+        if (affectedRows == 0) {
+            System.out.println("Insert skipped");
+        }
+
+        int lastGeneratedKey = getGeneratedKey(stmt);
+        stmt.close();
+
+        return lastGeneratedKey;
     }
 
-    public synchronized void insertSubArisePosition(int x, int y) throws SQLException {
+    public synchronized void insertSubArisePosition (
+            int x,
+            int y,
+            int subIdentifier
+    ) throws SQLException
+    {
         String sql = "INSERT INTO submarine_arise_position (position_x, position_y) VALUES (?, ?)";
-        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
         stmt.setInt(1, x);
         stmt.setInt(2, y);
         stmt.executeUpdate();
+
+        int lastGeneratedKey = getGeneratedKey(stmt);
+
+        stmt.close();
+
+        String sql2 = "UPDATE submarine SET arise_positionID = ?, active = ? WHERE submarineID = ?";
+
+        stmt2 = conn.prepareStatement(sql2);
+        stmt2.setInt(1, lastGeneratedKey);
+        stmt2.setString(2, "No");
+        stmt2.setInt(3, subIdentifier);
+        stmt2.executeUpdate();
+
+        stmt2.close();
     }
 
-    public synchronized void insertSubSunkPosition(int x, int y, int z) throws SQLException {
+    public synchronized void insertSubSunkPosition (
+            int x,
+            int y,
+            int z,
+            int subIdentifier
+    ) throws SQLException {
         String sql = "INSERT INTO submarine_sink_position (position_x, position_y, position_z) VALUES (?, ?, ?)";
-        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
         stmt.setInt(1, x);
         stmt.setInt(2, y);
         stmt.setInt(3, z);
         stmt.executeUpdate();
+
+        int lastGeneratedKey = getGeneratedKey(stmt);
+
+        stmt.close();
+
+        String sql2 = "UPDATE submarine SET sink_positionID = ?, active = ?, sunk = ? WHERE submarineID = ?";
+
+        stmt2 = conn.prepareStatement(sql2);
+        stmt2.setInt(1, lastGeneratedKey);
+        stmt2.setString(2, "No");
+        stmt2.setString(3, "Yes");
+        stmt2.setInt(4, subIdentifier);
+        stmt2.executeUpdate();
+
+        stmt2.close();
+    }
+
+    public void insertSubMeasurements(int subID, int sectorID, int x, int y, int z) throws SQLException {
+        String sql = "INSERT INTO submarine_measurements" +
+                "(submarineID, sectorID, vec_x, vec_y, vec_z) " +
+                "VALUES (?, ?, ?, ?, ?)";
+
+        stmt = conn.prepareStatement(sql);
+
+        stmt.setInt(1, subID);
+        stmt.setInt(2, sectorID);
+        stmt.setInt(3, x);
+        stmt.setInt(4, y);
+        stmt.setInt(5, z);
+
+        stmt.executeUpdate();
+        stmt.close();
     }
 
     public synchronized List<Map<String, Object>> getAllShips() throws SQLException {
@@ -175,7 +244,7 @@ public class Database {
 
     public synchronized List<Map<String, Object>> getAllSectors() throws SQLException {
         List<Map<String, Object>> sectors = new ArrayList<>();
-        String sql = "SELECT * FROM sector";
+        String sql = "SELECT * FROM sector ORDER BY sectorID";
 
         conn = getConnection();
         statement = conn.createStatement();
@@ -189,8 +258,8 @@ public class Database {
             sectors.add(sector);
         }
 
-        conn.close();
-        statement.close();
+//        conn.close();
+//        statement.close();
         return sectors;
     }
 
@@ -232,7 +301,11 @@ public class Database {
         List<Map<String, Object>> allSectorData = new ArrayList<>();
 
         for (Map<String, Object> sector : sectors) {
-            int sectorID = (Integer) sector.get("sectorID");
+            int x = (int) sector.get("position_x");
+            int y = (int) sector.get("position_y");
+
+            Vec2D sectorVec = new Vec2D(x,y);
+            int sectorID = getSectorID(sectorVec);
 
             Map<String, Object> scanData = getScanResultsForSector(sectorID);
             sector.putAll(scanData);
@@ -243,6 +316,17 @@ public class Database {
             allSectorData.add(sector);
         }
         return allSectorData;
+    }
+
+    private int getGeneratedKey(PreparedStatement stmt) {
+        try (ResultSet rs = stmt.getGeneratedKeys()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     private synchronized Map<String, Object> getScanResultsForSector(int sectorID) throws SQLException {
@@ -355,14 +439,20 @@ public class Database {
 
     public synchronized List<Map<String, Object>> getAllSubmarineData() throws SQLException {
         List<Map<String, Object>> submarines = new ArrayList<>();
-        String sql = "SELECT s.submarineID, ship.`name` AS ship_name," +
-                "ssp.position_x AS sink_position_x, ssp.position_y AS sink_position_y, ssp.position_z AS sink_position_z," +
-                "sap.position_x AS arise_position_x, sap.position_y AS arise_position_y," +
-                "s.`active`, s.sunk " +
+        String sql = "SELECT " +
+                "s.submarineID, " +
+                "ship.`name` AS ship_name," +
+                "ssp.position_x AS sink_position_x," +
+                "ssp.position_y AS sink_position_y," +
+                "ssp.position_z AS sink_position_z," +
+                "sap.position_x AS arise_position_x," +
+                "sap.position_y AS arise_position_y," +
+                "s.`active`," +
+                "s.sunk " +
                 "FROM submarine s " +
                 "INNER JOIN `ship` ON s.shipID = ship.shipID " +
-                "INNER JOIN `submarine_sink_position` ssp ON s.sink_positionID = ssp.sink_positionID " +
-                "INNER JOIN `submarine_arise_position` sap ON s.arise_positionID = sap.arise_positionID";
+                "LEFT JOIN `submarine_sink_position` ssp ON s.sink_positionID = ssp.sink_positionID " +
+                "LEFT JOIN `submarine_arise_position` sap ON s.arise_positionID = sap.arise_positionID";
 
         conn = getConnection();
         statement = conn.createStatement();
@@ -377,7 +467,6 @@ public class Database {
             submarine.put("sinkPositionZ", rs.getInt("sink_position_z"));
             submarine.put("arisePositionX", rs.getInt("arise_position_x"));
             submarine.put("arisePositionY", rs.getInt("arise_position_y"));
-            submarine.put("arisePositionZ", rs.getInt("arise_position_z"));
             submarine.put("active", rs.getString("active"));
             submarine.put("sunk", rs.getString("sunk"));
             submarines.add(submarine);
@@ -404,16 +493,16 @@ public class Database {
         return shipName;
     }
 
-    private synchronized int getSectorID(Vec2D sector) throws SQLException {
+    synchronized int getSectorID(Vec2D sector) throws SQLException {
         int positionX = sector.getX();
         int positionY = sector.getY();
 
         String sql = "SELECT sectorID FROM sector WHERE position_x = ? AND position_y = ?";
 
-        stmt = conn.prepareStatement(sql);
-        stmt.setInt(1, positionX);
-        stmt.setInt(2, positionY);
-        ResultSet rs = stmt.executeQuery();
+        stmt2 = conn.prepareStatement(sql);
+        stmt2.setInt(1, positionX);
+        stmt2.setInt(2, positionY);
+        ResultSet rs = stmt2.executeQuery();
 
         int sectorID = 0;
 
@@ -421,7 +510,7 @@ public class Database {
             sectorID = rs.getInt("sectorID");
         }
 
-        stmt.close();
+        stmt2.close();
         return sectorID;
     }
 
@@ -451,4 +540,5 @@ public class Database {
         stmt.close();
         return sectorCoordinates;
     }
+
 }

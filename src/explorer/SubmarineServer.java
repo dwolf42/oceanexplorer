@@ -1,29 +1,21 @@
 package explorer;
 
-import ocean.AppLauncher;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 class SubmarineServer extends Thread {
 	private ServerSocket subSocket;
 	private List<Submarine> submarines = new ArrayList<>();
     private int shipDatabaseIdentifier;
+    private int sectorID;
 
-    public SubmarineServer(int shipDatabaseIdentifier) {
+    public SubmarineServer(int shipDatabaseIdentifier, int sectorID) {
         this.shipDatabaseIdentifier = shipDatabaseIdentifier;
+        this.sectorID = sectorID;
     }
 
     public void run() {
@@ -32,7 +24,7 @@ class SubmarineServer extends Thread {
 
 			while (!isInterrupted()) {
 					Socket client = subSocket.accept();
-					Submarine submarine = new Submarine(client, shipDatabaseIdentifier);
+					Submarine submarine = new Submarine(client, shipDatabaseIdentifier, sectorID);
 					submarine.start();
 			}
 		} catch (IOException e) {

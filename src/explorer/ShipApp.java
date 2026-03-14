@@ -23,7 +23,7 @@ public class ShipApp {
 	private String name;
 	private String typ;
 	private String shipID;
-    private int shipDatabaseIdentifier;
+    private int shipDatabaseIdentifier; //primary key from the ship table
 	private Vec2D sector;
 	private Vec2D direction;
 	private JSONObject jsonObject;
@@ -118,7 +118,9 @@ public class ShipApp {
 
                 insertLaunchedDataInDatabase();
 
-                submarineServer = new SubmarineServer(shipDatabaseIdentifier);
+                int sectorID = database.getSectorID(sector);
+
+                submarineServer = new SubmarineServer(shipDatabaseIdentifier, sectorID);
                 submarineServer.start();
                 break;
             case "message":
@@ -132,8 +134,6 @@ public class ShipApp {
                     database.insertSector(sector.getX(), sector.getY());
                 }
                 break;
-            //	case "crash" -> crash();
-            //{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
             case "scanned":
                 System.out.println("Scan Result: " + jsonObject);
                 insertScanResultsInDatabase(jsonObject);
@@ -148,7 +148,7 @@ public class ShipApp {
 	}
 
 	public void launch() throws InterruptedException, SQLException {
-		this.sector = new Vec2D(60, 60);
+		this.sector = new Vec2D(40, 40);
 		this.direction = new Vec2D(0, 1);
 
 		jsonObject.put("cmd", "launch");

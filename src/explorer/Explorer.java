@@ -26,7 +26,7 @@ public class Explorer {
     }
 
 	public void explore() throws InterruptedException, SQLException, IOException {
-		ShipApp shipApp = new ShipApp("Test123", "ship");
+		ShipApp shipApp = new ShipApp("Leopard1", "ship");
 
 		synchronized (shipApp) {
 			// establish connection to OceanServer
@@ -74,8 +74,5 @@ public class Explorer {
 				}
 			}
 		}
-	}
-
-	public void operate() {
 	}
 }

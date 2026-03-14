@@ -11,10 +11,6 @@ import java.util.Map;
 
 public class WebApp {
     private Database database = new Database();
-    private List<Map<String, Object>> ships;
-    private List<Map<String, Object>> allSectorsData;
-    private List<Map<String, Object>> shipsScanData;
-    private List<Map<String, Object>> shipsRadarData;
     private List<Map<String, Object>> submarinesData;
 
     public WebApp() throws SQLException {
@@ -51,9 +47,10 @@ public class WebApp {
                 int shipID = Integer.parseInt(parts[2]);
                 renderShipRadarData(exchange, shipID);
             }
-            else if (path.contains("/sector") && path.contains("/submarine-measurements") ) {
+            else if (path.contains("/sector") && path.contains("/submarine-measurements")) {
                 String[] parts = path.split("/");
                 int sectorID = Integer.parseInt(parts[2]);
+
                 renderSectorSubmarineMeasurements(exchange, sectorID);
             }
         } catch (Exception e) {
@@ -107,6 +104,7 @@ public class WebApp {
     private void renderSectorSubmarineMeasurements(HttpExchange exchange, int sectorID) throws SQLException, IOException {
         submarinesData = database.getSubmarineMeasurementsForSector(sectorID);
         StringBuilder rows = new StringBuilder();
+
         for (Map<String, Object> submarineData : submarinesData) {
             rows.append(String.format("""
             <tr>
@@ -128,7 +126,7 @@ public class WebApp {
     }
 
     private void renderSectorData(HttpExchange exchange) throws IOException, SQLException {
-        allSectorsData = database.getAllSectorData();
+        List<Map<String, Object>> allSectorsData = database.getAllSectorData();
         StringBuilder rows = new StringBuilder();
         for (Map<String, Object> sector : allSectorsData) {
             rows.append(String.format("""
@@ -186,7 +184,7 @@ public class WebApp {
     }
 
     private void renderShipRadarData(HttpExchange exchange, int shipID) throws SQLException, IOException {
-        shipsRadarData = database.getShipRadarData(shipID);
+        List<Map<String, Object>> shipsRadarData = database.getShipRadarData(shipID);
         StringBuilder rows = new StringBuilder();
         String shipName = "";
 
@@ -215,7 +213,7 @@ public class WebApp {
     }
 
     private void renderShips(HttpExchange exchange) throws SQLException, IOException {
-        ships = database.getAllShips();
+        List<Map<String, Object>> ships = database.getAllShips();
         StringBuilder rows = new StringBuilder();
         for (Map<String, Object> ship : ships) {
             rows.append(String.format("""
@@ -244,7 +242,7 @@ public class WebApp {
     }
 
     private void renderShipScanData(HttpExchange exchange, int shipID) throws SQLException, IOException {
-        shipsScanData = database.getShipScanData(shipID);
+        List<Map<String, Object>> shipsScanData = database.getShipScanData(shipID);
         StringBuilder rows = new StringBuilder();
         for (Map<String, Object> shipScanData : shipsScanData) {
             rows.append(String.format("""
@@ -277,7 +275,6 @@ public class WebApp {
                 <td data-label='Sink position z'>%s</td>
                 <td data-label='Arise position x'>%s</td>
                 <td data-label='Arise position y'>%s</td>
-                <td data-label='Arise position z'>%s</td>
                 <td data-label='Active'>%s</td>
                 <td data-label='Sunk'>%s</td>
             </tr>
@@ -289,7 +286,6 @@ public class WebApp {
                     submarineData.get("sinkPositionZ"),
                     submarineData.get("arisePositionX"),
                     submarineData.get("arisePositionY"),
-                    submarineData.get("arisePositionZ"),
                     submarineData.get("active"),
                     submarineData.get("sunk")
             ));
