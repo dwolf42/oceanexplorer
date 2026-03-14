@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>Submarine data</title>
+</head>
+<body>
+<h1>Submarine</h1>
+<div class="button-container">
+    <a href='http://localhost:8000'><p class="back-button">Go back to the homepage</p></a>
+</div>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+        <tr>
+            <th>Submarine ID</th>
+            <th>Ship name</th>
+            <th>Sink position x</th>
+            <th>Sink position y</th>
+            <th>Sink position z</th>
+            <th>Arise position x</th>
+            <th>Arise position y</th>
+            <th>Active(Yes/No)</th>
+            <th>Sunk(Yes/No)</th>
+        </tr>
+        </thead>
+        <tbody>
+        %s
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

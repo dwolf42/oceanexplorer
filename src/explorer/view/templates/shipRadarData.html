@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>Ship Radar Data</title>
+</head>
+<body>
+<h1>Ship Radar Data</h1>
+<div class="button-container">
+    <a href='http://localhost:8000/ships'><p class="back-button">Go back to the list of ships</p></a>
+    <a href='http://localhost:8000'><p class="homepage-back-button">Go back to the homepage</p></a>
+</div>
+
+<div class="table-wrapper">
+    <p>%s</p>
+    <table>
+        <thead>
+        <tr>
+            <th>Ground</th>
+            <th>Height</th>
+            <th>Navigable</th>
+            <th>Sector Position X</th>
+            <th>Sector Position Y</th>
+        </tr>
+        </thead>
+        <tbody>
+        %s
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
