@@ -96,8 +96,6 @@ public class ShipApp {
 			oceanListener = new OceanListener();
 			oceanListener.start();
 			this.oceanServerHost = hostNameOS;
-			submarineServer = new SubmarineServer();
-			submarineServer.start();
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
