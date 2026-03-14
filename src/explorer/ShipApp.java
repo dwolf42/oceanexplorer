@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -23,12 +24,14 @@ public class ShipApp {
 	private String name;
 	private String typ;
 	private String shipID;
+	private int shipDatabaseIdentifier; //primary key from the ship table
 	private Vec2D sector;
 	private Vec2D direction;
 	private JSONObject jsonObject;
 	private OceanListener oceanListener;
 	private ArrayList<RadarEcho> echos;
 	private SubmarineServer submarineServer;
+	private Database database = new Database();
 
 	// Please note: code regarding the torpedo-feature is AI generated
 	/*
@@ -38,7 +41,7 @@ public class ShipApp {
 		sw = -1, -1	   s = 0, -1	se = 1, -1
 	 */
 
-	public ShipApp(String name, String typ) {
+	public ShipApp(String name, String typ) throws SQLException {
 		this.name = name;
 		this.typ = typ;
 
@@ -49,8 +52,6 @@ public class ShipApp {
 		jsonObject = new JSONObject();
 		jsonObject.put("name", this.name);
 		jsonObject.put("typ", this.typ);
-
-
 	}
 
 	// Send and receive messages from OceanServer
@@ -79,7 +80,7 @@ public class ShipApp {
 				System.out.println("OceanListener thread exiting");
 			} catch (IOException e) {
 				e.printStackTrace();
-			} catch (InterruptedException e) {
+			} catch (InterruptedException | SQLException e) {
 				// -
 			}
 		}
@@ -106,7 +107,7 @@ public class ShipApp {
 
 	// TODO: navigation directly sends to server, probably put it in here
 	// Process messages (JSON) from OceanServer
-	public synchronized void handleMessage(JSONObject jsonObject) throws InterruptedException {
+	public synchronized void handleMessage(JSONObject jsonObject) throws InterruptedException, SQLException {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
 			case "launch":
@@ -115,18 +116,29 @@ public class ShipApp {
 			case "launched":
 				this.shipID = jsonObject.get("id").toString();
 				System.out.printf("Launched: %s, ", this.shipID);
+
+				insertLaunchedDataInDatabase();
+				int sectorID = database.getSectorID(sector);
+
+				submarineServer = new SubmarineServer(shipDatabaseIdentifier, sectorID);
+				submarineServer.start();
 				break;
 			case "message":
 				message(jsonObject);
 				break;
 			case "move2d":
+				Vec2D oldValueOfSector = sector;
 				move2d(jsonObject);
-				break;
-//			case "crash":
+				if (!oldValueOfSector.equals(sector)) {
+					database.insertSector(sector.getX(), sector.getY());
+				}
 
+				break;
+			//	case "crash" -> crash();
 			//{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
 			case "scanned":
 				System.out.println("Scan Result: " + jsonObject.toString());
+				insertScanResultsInDatabase(jsonObject);
 				break;
 			case "radarresponse":
 				radarresponse(jsonObject);
@@ -138,8 +150,8 @@ public class ShipApp {
 	}
 
 	// Spawns a ship on the ocean
-	public void launch() throws InterruptedException {
-		this.sector = new Vec2D(1, 1);
+	public void launch() throws InterruptedException, SQLException {
+		this.sector = new Vec2D(40, 40);
 		this.direction = new Vec2D(0, 1);
 
 		jsonObject.put("cmd", "launch");
@@ -185,7 +197,7 @@ public class ShipApp {
 	// Handles radar responses from OceanServer
 	public void radarresponse(JSONObject jsonObject) {
 		System.out.println("Response: " + jsonObject.toString());
-		JSONArray response = new JSONArray(jsonObject.getJSONArray("echos"));
+        JSONArray response = jsonObject.getJSONArray("echos");
 		echos = new ArrayList<>();
 
 		for (int i = 0; i < response.length(); i++) {
@@ -193,10 +205,29 @@ public class ShipApp {
 			echos.add(re);
 		}
 
-		System.out.println(" ");
-		System.out.println(Arrays.toString(echos.toArray()));
+        try {
+            database.insertShipRadarData(this.shipDatabaseIdentifier, echos);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(echos);
 	}
 
+    private void insertLaunchedDataInDatabase() throws SQLException {
+        database.insertSector(sector.getX(), sector.getY());
+
+        String shipName = shipID.split("#")[2];
+        this.shipDatabaseIdentifier = database.insertShipData(shipID, shipName);
+    }
+
+    private void insertScanResultsInDatabase(JSONObject jsonObject) throws SQLException {
+        int totalDepthAverage = jsonObject.getInt("depth");
+        float standardDeviation = jsonObject.getFloat("stddev");
+
+        database.insertShipScanData(totalDepthAverage, standardDeviation, sector, this.shipDatabaseIdentifier);
+
+    }
 	// The gui's exit button interrupts SubmarineServer, sends exit to OceanServer and interrupts OceanListener
 	// before ending the current main thread
 	public void exit() {

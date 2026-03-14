@@ -1,5 +1,6 @@
 package explorer;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.SQLException;
 
 
 // Please note: code regarding the torpedo-feature is AI generated
@@ -16,11 +18,19 @@ public class Submarine extends Thread {
 	private Socket connection;
 	private BufferedReader in;
 	private PrintWriter out;
+	private Database database = new Database();
+	private int shipDatabaseIdentifier;         // Primary key of the ship in the database
+	private String serverSubID;                 // Submarine ID received from the server
+	private int subIdentifier = 0;                  // Primary key of the submarine in the database
+	private int sectorID;
+
 	private boolean torpedoMode;
 	private Thread torpedoThread;
 
-	public Submarine(Socket connection, boolean torpedoMode) {
+	public Submarine(Socket connection, int shipDatabaseIdentifier, int sectorID, boolean torpedoMode) throws SQLException {
 		this.connection = connection;
+		this.shipDatabaseIdentifier = shipDatabaseIdentifier;
+		this.sectorID = sectorID;
 		this.torpedoMode = torpedoMode;
 		try {
 			in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -45,10 +55,13 @@ public class Submarine extends Thread {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
 			// -
+		} catch (SQLException e) {
+			e.printStackTrace();
 		} finally {
 			exit();
 		}
 	}
+
 
 	// Process torpedo communication separated from the other submarines to avoid interferences
 	public void torpedoComm(JSONObject json) {
@@ -70,30 +83,71 @@ public class Submarine extends Thread {
 		torpedoThread.start();
 	}
 
-	public void handleMessage(JSONObject jsonObject) throws InterruptedException {
+
+	public void handleMessage(JSONObject jsonObject) throws InterruptedException, SQLException {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
-			case "ready":
-				System.out.println("Ready Message: " + jsonObject);
-				if(torpedoMode) startTorpedoMode();
-				break;
-			case "message":
-				System.out.println("Message Message: " + jsonObject);
-				break;
-			case "measure":
-				System.out.println("Measure Message: " + jsonObject);
-				break;
-			case "crash":
-				System.out.println("Crash Message: " + jsonObject);
-				if (torpedoThread != null) torpedoThread.interrupt();
-				break;
-			case "arise":
-			System.out.println("Arise Message: " + jsonObject);
-			exit();
-				break;
-			default:
-				System.out.println("Unknown Command: " + cmd);
-		}
+            case "ready":
+                System.out.println("Ready Message: " + jsonObject);
+
+                this.serverSubID = jsonObject.get("id").toString();
+                if (subIdentifier == 0) {
+                    subIdentifier = database.insertSubmarineData(shipDatabaseIdentifier, serverSubID);
+                }
+
+                break;
+            case "message":
+                System.out.println("Message Message: " + jsonObject);
+                break;
+            case "measure":
+                System.out.println("Measure Message: " + jsonObject);
+                JSONArray vecs = jsonObject.getJSONArray("vecs");
+
+                int x = 0;
+                int y = 0;
+                int z = 0;
+
+                for (int i = 0; i < vecs.length(); i++) {
+                    JSONArray vec = vecs.getJSONArray(i);
+                    x = vec.getInt(0);
+                    y = vec.getInt(1);
+                    z = vec.getInt(2);
+                }
+
+                database.insertSubMeasurements(subIdentifier, sectorID, x, y, z);
+                break;
+            case "crash":
+                System.out.println("Crashed");
+                System.out.println("Crash Message: " + jsonObject);
+
+                JSONObject sunkPos = (JSONObject) jsonObject.query("/sunkPos");
+                JSONArray vecCrash = sunkPos.getJSONArray("vec");
+
+                database.insertSubSunkPosition(
+                        vecCrash.getInt(0),
+                        vecCrash.getInt(1),
+                        vecCrash.getInt(2),
+                        subIdentifier
+                );
+                break;
+            case "arise":
+                System.out.println("Arise Message: " + jsonObject);
+
+                JSONObject arisePos = (JSONObject) jsonObject.query("/arisePos");
+                JSONArray vecArise = arisePos.getJSONArray("vec");
+
+                // We pick only the x and y coordinates because z is almost always 1
+                database.insertSubArisePosition(
+                        vecArise.getInt(0),
+                        vecArise.getInt(1),
+                        subIdentifier
+                );
+
+                exit();
+                break;
+            default:
+                System.out.println("Unknown Command: " + cmd);
+        }
 	}
 
 	// The arise command triggers the submarine's thread interruption
