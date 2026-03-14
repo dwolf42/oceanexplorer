@@ -16,8 +16,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// Please note: code regarding the torpedo-feature is AI generated
+// SubmarineServer has been extracted to a separate class to prevent ShipApp from cludder
+// Adds a socket to each new submarine and handles communication with it
 class SubmarineServer extends Thread {
 	private ServerSocket subSocket;
+
+	// Holds all Submaines, so they can be interrupted once the
 	private List<Submarine> submarines = new ArrayList<>();
 	private boolean nextIsTorpedo = false;
 

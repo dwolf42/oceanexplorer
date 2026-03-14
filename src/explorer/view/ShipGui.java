@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+// Please note: code regarding the torpedo-feature is AI generated
 public class ShipGui {
 	private ShipApp shipApp;
 

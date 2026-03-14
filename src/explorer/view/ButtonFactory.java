@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
+// Please note: code regarding the torpedo-feature is AI generated
+// Creates all buttons used in ShipGui to prevent gui class from cludder
 public class ButtonFactory {
 	public ArrayList<Button> doMakeMeButtons(ShipApp shipApp) {
 		ArrayList<Button> buttons = new ArrayList<>();

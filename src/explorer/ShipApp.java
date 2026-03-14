@@ -30,6 +30,7 @@ public class ShipApp {
 	private ArrayList<RadarEcho> echos;
 	private SubmarineServer submarineServer;
 
+	// Please note: code regarding the torpedo-feature is AI generated
 	/*
 		Ship Directons
 		nw = -1, 1     n = 0, 1     ne = 1, 1
@@ -52,6 +53,7 @@ public class ShipApp {
 
 	}
 
+	// Send and receive messages from OceanServer
 	class OceanListener extends Thread {
 		private BufferedReader in;
 		private PrintWriter out;
@@ -86,6 +88,7 @@ public class ShipApp {
 
 	// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
 
+	// Establish connection to OceanServer, initializes OceanListener and SubmarineServer
 	public boolean connectOS(String hostNameOS, int portOS) {
 		try {
 			toOceanServer = new Socket(hostNameOS, portOS);
@@ -101,6 +104,8 @@ public class ShipApp {
 		}
 	}
 
+	// TODO: navigation directly sends to server, probably put it in here
+	// Process messages (JSON) from OceanServer
 	public synchronized void handleMessage(JSONObject jsonObject) throws InterruptedException {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
@@ -132,6 +137,7 @@ public class ShipApp {
 		notifyAll();
 	}
 
+	// Spawns a ship on the ocean
 	public void launch() throws InterruptedException {
 		this.sector = new Vec2D(1, 1);
 		this.direction = new Vec2D(0, 1);
@@ -142,10 +148,12 @@ public class ShipApp {
 		handleMessage(jsonObject);
 	}
 
+	// Handles "message" command from OceanServer
 	public void message(JSONObject jsonObject) {
 		System.out.println("Message: " + jsonObject.toString());
 	}
 
+	// Handles "move2d" command from OceanServer
 	public void move2d(JSONObject jsonObject) {
 		this.sector = Vec2D.fromJson(jsonObject.getJSONObject("sector"));
 		this.direction = Vec2D.fromJson(jsonObject.getJSONObject("dir"));
@@ -155,26 +163,26 @@ public class ShipApp {
 		System.out.printf("Current direction: %s\n", this.direction.toString());
 	}
 
-	// Rudder rudder, Course course
+	// Builds the JSON to be sent to OceanServer for updating ship location
 	public void navigate(Rudder rudderDirection, Course courseDirection) {
 		JSONObject nav = new JSONObject();
 		nav.put("cmd", "navigate");
-
 		nav.put("rudder", rudderDirection.toString());
-
 		nav.put("course", courseDirection.toString());
-
 		oceanListener.out.println(nav);
 	}
 
+	// Builds the JSON to be sent to OceanServer for ship scan action
 	public void scan() {
 		oceanListener.out.println(new JSONObject().put("cmd", "scan"));
 	}
 
+	// Builds the JSON to be sent to OceanServer for ship radar action
 	public void radar() {
 		oceanListener.out.println(new JSONObject().put("cmd", "radar"));
 	}
 
+	// Handles radar responses from OceanServer
 	public void radarresponse(JSONObject jsonObject) {
 		System.out.println("Response: " + jsonObject.toString());
 		JSONArray response = new JSONArray(jsonObject.getJSONArray("echos"));
@@ -189,21 +197,26 @@ public class ShipApp {
 		System.out.println(Arrays.toString(echos.toArray()));
 	}
 
+	// The gui's exit button interrupts SubmarineServer, sends exit to OceanServer and interrupts OceanListener
+	// before ending the current main thread
 	public void exit() {
-		oceanListener.out.println(new JSONObject().put("cmd", "exit"));
 		submarineServer.interrupt();
+		oceanListener.out.println(new JSONObject().put("cmd", "exit"));
 		oceanListener.interrupt();
 		Thread.currentThread().interrupt();
 	}
 
+	// ShipGui uses this to display the ship's name in the window title
 	public String getShipId() {
 		return this.shipID;
 	}
 
+	// Spawns a new submarine, which communicates via SubmarineServer
 	public void deploySubmarine() {
 		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
 	}
 
+	// Spawns a new submarine which acts like a torpedo by propelling mindlessly ahead
 	public void launchTorpedo() {
 		submarineServer.setNextIsTorpedo(true);
 		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);

@@ -9,6 +9,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+
+// Please note: code regarding the torpedo-feature is AI generated
+// The Submarine class holds the socket (connection) to communicate with the SubmarineServer
 public class Submarine extends Thread {
 	private Socket connection;
 	private BufferedReader in;
@@ -27,6 +30,7 @@ public class Submarine extends Thread {
 		}
 	}
 
+	// Send and receive messages from SubmarineServer
 	@Override
 	public void run() {
 		try {
@@ -46,14 +50,16 @@ public class Submarine extends Thread {
 		}
 	}
 
-	public void send(JSONObject json) {
+	// Process torpedo communication separated from the other submarines to avoid interferences
+	public void torpedoComm(JSONObject json) {
 		out.println(json);
 	}
 
+	// Periodically sends the command to propell the torpedo
 	private void startTorpedoMode() {
 		torpedoThread = new Thread(() -> {
 			while (!Thread.currentThread().isInterrupted()) {
-				send(new JSONObject().put("cmd", "pilot").put("route", "C"));
+				torpedoComm(new JSONObject().put("cmd", "pilot").put("route", "C"));
 				try {
 					Thread.sleep(500);
 				} catch (InterruptedException e) {
@@ -90,6 +96,7 @@ public class Submarine extends Thread {
 		}
 	}
 
+	// The arise command triggers the submarine's thread interruption
 	public void exit() {
 		if (torpedoThread != null) torpedoThread.interrupt();
 		try {

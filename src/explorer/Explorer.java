@@ -2,9 +2,10 @@ package explorer;
 
 import explorer.view.ShipGui;
 
+// Please note: code regarding the torpedo-feature is AI generated
 public class Explorer {
 
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) {
 		Explorer exp = new Explorer();
 		try {
 			exp.explore();
@@ -13,6 +14,8 @@ public class Explorer {
 		}
 	}
 
+	// Initialize a new ship and its connection to the OceanServer.
+	// Also initialize the ShipGui
 	public void explore() throws InterruptedException {
 		ShipApp shipApp = new ShipApp("The Ship", "ship");
 		ShipGui shipGui;
