@@ -8,22 +8,18 @@ import java.sql.SQLException;
 public class Explorer {
 
 	public static void main(String[] args) {
-        try {
-            WebApp webApp = new WebApp();
-            webApp.startWebApplication();
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        }
-
-        Explorer exp = new Explorer();
 		try {
+			WebApp webApp = new WebApp();
+			webApp.startWebApplication();
+			Explorer exp = new Explorer();
 			exp.explore();
-		} catch (InterruptedException e) {
-			// -
 		} catch (SQLException | IOException e) {
-            e.printStackTrace();
-        }
-    }
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+
+	}
 
 	// Initialize a new ship and its connection to the OceanServer.
 	// Also initialize the ShipGui
