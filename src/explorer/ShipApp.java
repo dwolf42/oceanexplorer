@@ -34,13 +34,6 @@ public class ShipApp {
 	private Database database = new Database();
 
 	// Please note: code regarding the torpedo-feature is AI generated
-	/*
-		Ship Directons
-		nw = -1, 1     n = 0, 1     ne = 1, 1
-		w = -1, 0					e = 1, 0
-		sw = -1, -1	   s = 0, -1	se = 1, -1
-	 */
-
 	public ShipApp(String name, String typ) throws SQLException {
 		this.name = name;
 		this.typ = typ;
@@ -85,9 +78,6 @@ public class ShipApp {
 			}
 		}
 	}
-
-
-	// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
 
 	// Establish connection to OceanServer, initializes OceanListener and SubmarineServer
 	public boolean connectOS(String hostNameOS, int portOS) {
@@ -226,6 +216,7 @@ public class ShipApp {
         database.insertShipScanData(totalDepthAverage, standardDeviation, sector, this.shipDatabaseIdentifier);
 
     }
+
 	// The gui's exit button interrupts SubmarineServer, sends exit to OceanServer and interrupts OceanListener
 	// before ending the current main thread
 	public void exit() {

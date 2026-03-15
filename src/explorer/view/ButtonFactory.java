@@ -12,6 +12,7 @@ import java.util.ArrayList;
 // Please note: code regarding the torpedo-feature is AI generated
 // Creates all buttons used in ShipGui to prevent gui class from cludder
 public class ButtonFactory {
+// TODO: add a text field which gets updated instead of the console
 	public ArrayList<Button> doMakeMeButtons(ShipApp shipApp) {
 		ArrayList<Button> buttons = new ArrayList<>();
 

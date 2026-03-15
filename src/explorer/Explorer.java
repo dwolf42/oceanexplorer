@@ -3,7 +3,6 @@ package explorer;
 import explorer.view.ShipGui;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Scanner;
 
 // Please note: code regarding the torpedo-feature is AI generated
 public class Explorer {
