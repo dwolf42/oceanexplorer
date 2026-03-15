@@ -1,5 +1,6 @@
 package explorer;
 
+import explorer.view.ShipGui;
 import ocean.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,6 +33,7 @@ public class ShipApp {
 	private ArrayList<RadarEcho> echos;
 	private SubmarineServer submarineServer;
 	private Database database = new Database();
+	private ShipGui shipGui;
 
 	// Please note: code regarding the torpedo-feature is AI generated
 	public ShipApp(String name, String typ) throws SQLException {
@@ -93,14 +95,13 @@ public class ShipApp {
 		}
 	}
 
-	// TODO: navigation directly sends to server, probably put it in here
 	// Process messages (JSON) from OceanServer
 	public synchronized void handleMessage(JSONObject jsonObject) throws InterruptedException, SQLException {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
 			case "launched":
 				this.shipID = jsonObject.get("id").toString();
-				System.out.printf("Launched: %s, ", this.shipID);
+				this.shipGui.updateTextArea("Launched: " + this.shipID);
 
 				insertLaunchedDataInDatabase();
 				int sectorID = database.getSectorID(sector);
@@ -121,7 +122,7 @@ public class ShipApp {
 			//	case "crash" -> crash();
 			//{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
 			case "scanned":
-				System.out.println("Scan Result: " + jsonObject.toString());
+				this.shipGui.updateTextArea("Sector scanned!");
 				insertScanResultsInDatabase(jsonObject);
 				break;
 			case "radarresponse":
@@ -146,17 +147,20 @@ public class ShipApp {
 
 	// Handles "message" command from OceanServer
 	public void message(JSONObject jsonObject) {
-		System.out.println("Message: " + jsonObject.toString());
+		String type = jsonObject.get("type").toString();
+		String text = jsonObject.get("text").toString();
+		this.shipGui.updateTextArea(type + ": " + text);
 	}
 
-	// Handles "move2d" command from OceanServer
+	// Updates sector and direction fields with new values, and displays them in the Gui
 	public void move2d(JSONObject jsonObject) {
 		this.sector = Vec2D.fromJson(jsonObject.getJSONObject("sector"));
 		this.direction = Vec2D.fromJson(jsonObject.getJSONObject("dir"));
 		jsonObject.put("sector", this.sector.toJson());
 		jsonObject.put("dir", this.direction.toJson());
-		System.out.printf("Current position: %s, ", this.sector.toString());
-		System.out.printf("Current direction: %s\n", this.direction.toString());
+
+		this.shipGui.updateTextArea("Current position: " + this.sector.toString());
+		this.shipGui.updateTextArea("Current direction: " + this.direction.toString());
 	}
 
 	// Builds the JSON to be sent to OceanServer for updating ship location
@@ -180,7 +184,7 @@ public class ShipApp {
 
 	// Handles radar responses from OceanServer
 	public void radarresponse(JSONObject jsonObject) {
-		System.out.println("Response: " + jsonObject.toString());
+
         JSONArray response = jsonObject.getJSONArray("echos");
 		echos = new ArrayList<>();
 
@@ -191,11 +195,11 @@ public class ShipApp {
 
         try {
             database.insertShipRadarData(this.shipDatabaseIdentifier, echos);
+			this.shipGui.updateTextArea("Sourrounding sectors scanned!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        System.out.println(echos);
 	}
 
     private void insertLaunchedDataInDatabase() throws SQLException {
@@ -238,4 +242,7 @@ public class ShipApp {
 		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
 	}
 
+	public void setShipGui(ShipGui shipGui) {
+		this.shipGui = shipGui;
+	}
 }

@@ -3,20 +3,18 @@ package explorer.view;
 import explorer.ShipApp;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 // Please note: code regarding the torpedo-feature is AI generated
 public class ShipGui {
 	private ShipApp shipApp;
+	private Frame win;
 	private TextArea textArea;
 
 	public ShipGui(ShipApp shipApp) {
 		this.shipApp = shipApp;
 		// Create window
-		Frame win = new Frame(shipApp.getShipId());
+		win = new Frame();
 		win.setLayout(new BorderLayout());
 
 		// Panel for TextArea
@@ -43,6 +41,9 @@ public class ShipGui {
 	}
 
 	public void updateTextArea(String text) {
-		textArea.append(text + "\n");
+		this.textArea.append(text + "\n");
+	}
+	public void updateWinTitle(String text) {
+		this.win.setTitle(text);
 	}
 }
