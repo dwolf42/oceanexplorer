@@ -223,7 +223,8 @@ public class ShipApp {
 		submarineServer.interrupt();
 		oceanListener.out.println(new JSONObject().put("cmd", "exit"));
 		oceanListener.interrupt();
-		Thread.currentThread().interrupt();
+		database.close();
+		System.exit(0);
 	}
 
 	// ShipGui uses this to display the ship's name in the window title
