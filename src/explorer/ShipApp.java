@@ -14,7 +14,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class ShipApp {
 	private Socket toOceanServer;
@@ -225,11 +224,6 @@ public class ShipApp {
 		oceanListener.interrupt();
 		database.close();
 		System.exit(0);
-	}
-
-	// ShipGui uses this to display the ship's name in the window title
-	public String getShipId() {
-		return this.shipID;
 	}
 
 	// Spawns a new submarine, which communicates via SubmarineServer

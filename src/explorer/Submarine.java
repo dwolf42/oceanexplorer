@@ -51,12 +51,10 @@ public class Submarine extends Thread {
 			}
 
 			System.out.println("Submarine thread exiting");
-		} catch (IOException e) {
+		} catch (IOException | SQLException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
 			// -
-		} catch (SQLException e) {
-			e.printStackTrace();
 		} finally {
 			exit();
 		}
