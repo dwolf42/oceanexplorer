@@ -3,6 +3,8 @@ package explorer.view;
 import explorer.ShipApp;
 
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 
 // Please note: code regarding the torpedo-feature is AI generated
@@ -17,9 +19,17 @@ public class ShipGui {
 		win = new Frame();
 		win.setLayout(new BorderLayout());
 
+		// Window listener to handle close event
+		win.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				win.dispose(); // Close this frame only
+			}
+		});
+
 		// Panel for TextArea
 		Panel topPanel = new Panel(new BorderLayout());
-		textArea = new TextArea("", 10, 20, TextArea.SCROLLBARS_NONE);
+		textArea = new TextArea("", 10, 20, TextArea.SCROLLBARS_VERTICAL_ONLY);
 		textArea.setEditable(false);
 		topPanel.add(textArea, BorderLayout.CENTER);
 
@@ -27,7 +37,7 @@ public class ShipGui {
 		Panel buttonPanel = new Panel(new GridLayout(0, 3));
 
 		ButtonFactory buttonFactory = new ButtonFactory();
-		ArrayList<Button> buttons = buttonFactory.doMakeMeButtons(this.shipApp);
+		ArrayList<Button> buttons = buttonFactory.doMakeMeButtons(this.shipApp, this);
 		for (Button button : buttons) {
 			buttonPanel.add(button);
 		}
@@ -43,7 +53,12 @@ public class ShipGui {
 	public void updateTextArea(String text) {
 		this.textArea.append(text + "\n");
 	}
+
 	public void updateWinTitle(String text) {
 		this.win.setTitle(text);
+	}
+
+	public void exit() {
+		win.dispose();
 	}
 }
