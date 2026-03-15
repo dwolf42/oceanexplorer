@@ -13,7 +13,7 @@ import java.util.ArrayList;
 // Creates all buttons used in ShipGui to prevent gui class from cludder
 public class ButtonFactory {
 // TODO: add a text field which gets updated instead of the console
-	public ArrayList<Button> doMakeMeButtons(ShipApp shipApp) {
+	public ArrayList<Button> doMakeMeButtons(ShipApp shipApp, ShipGui shipGui) {
 		ArrayList<Button> buttons = new ArrayList<>();
 
 		Button bNW = new Button("NW");
@@ -57,6 +57,7 @@ public class ButtonFactory {
 		bExit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
+				shipGui.exit();
 				shipApp.exit();
 			}
 		});
