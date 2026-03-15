@@ -89,16 +89,14 @@ public class Submarine extends Thread {
 		switch (cmd) {
             case "ready":
                 System.out.println("Ready Message: " + jsonObject);
-
                 this.serverSubID = jsonObject.get("id").toString();
-
                 // checks if submarine does not exist in the database (if subIdentifier is still 0 it has not been inserted yet)
                 if (subIdentifier == 0) {
                     // inserts submarine into the database and assigns the generated primary key to the subIdentifier
                     subIdentifier = database.insertSubmarineData(shipDatabaseIdentifier, serverSubID);
                 }
-
-                break;
+				if (torpedoMode) startTorpedoMode();
+				break;
             case "message":
                 System.out.println("Message Message: " + jsonObject);
                 break;
@@ -160,6 +158,7 @@ public class Submarine extends Thread {
 			out.close();
 			in.close();
 			connection.close();
+			database.close();
 			this.interrupt();
 		} catch (IOException e) {
 			e.printStackTrace();
