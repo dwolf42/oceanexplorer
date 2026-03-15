@@ -12,19 +12,20 @@ import java.util.Map;
 public class WebApp {
     private Database database = new Database();
     private List<Map<String, Object>> submarinesData;
+    private int webAppPort = 7000;
 
     public WebApp() throws SQLException {
     }
 
     public void startWebApplication() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(webAppPort), 0);
         server.createContext("/", this::handleRequest);
         server.createContext("/static/", this::handleStaticFiles);
         server.start();
-        System.out.println("Open http://localhost:8000/");
+        System.out.println("Open http://localhost:" + webAppPort + "/");
     }
 
-    public void handleRequest(HttpExchange exchange){
+    public void handleRequest(HttpExchange exchange) {
         try {
             String path = exchange.getRequestURI().getPath();
 
@@ -40,11 +41,13 @@ public class WebApp {
             else if (path.contains("/scan-results") && path.contains("/ship")) {
                 String[] parts = path.split("/");
                 int shipID = Integer.parseInt(parts[2]);
+
                 renderShipScanData(exchange, shipID);
             }
             else if (path.contains("/radar-results") && path.contains("/ship")) {
                 String[] parts = path.split("/");
                 int shipID = Integer.parseInt(parts[2]);
+
                 renderShipRadarData(exchange, shipID);
             }
             else if (path.contains("/sector") && path.contains("/submarine-measurements")) {
@@ -77,11 +80,7 @@ public class WebApp {
         exchange.getResponseBody().close();
     }
 
-    private String getHTMLBase(String htmlTemplateName, StringBuilder rows) {
-        return getHTMLBase(htmlTemplateName, null, rows);
-    }
-
-    private String getHTMLBase(String htmlTemplateName, String shipName, StringBuilder rows) {
+    private String getHTMLBase(String htmlTemplateName, Map<String, String> placeholders) {
         StringBuilder data = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new FileReader("src/explorer/view/templates/" + htmlTemplateName))) {
             String line;
@@ -92,13 +91,11 @@ public class WebApp {
             e.printStackTrace();
         }
 
-        String template = data.toString();
-
-        if (shipName != null) {
-            return template.formatted(shipName, rows);
-        } else {
-            return template.formatted(rows);
+        String html = data.toString().replace("WEBAPP_PORT_PLACEHOLDER", String.valueOf(webAppPort));
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+            html = html.replace(entry.getKey(), entry.getValue());
         }
+        return html;
     }
 
     private void renderSectorSubmarineMeasurements(HttpExchange exchange, int sectorID) throws SQLException, IOException {
@@ -121,7 +118,7 @@ public class WebApp {
             ));
         }
 
-        String html = getHTMLBase("sectorSubmarineData.html", rows);
+        String html = getHTMLBase("sectorSubmarineData.html", Map.of("TABLE_ROWS", rows.toString()));
         renderHTML(exchange, html);
     }
 
@@ -140,7 +137,7 @@ public class WebApp {
                 <td data-label='Ground'>%s</td>
                 <td data-label='Navigable'>%s</td>
                 <td data-label='Submarine depth measurements'>
-                    <a class="back-button" href="http://localhost:8000/sector/%s/submarine-measurements">Show submarine data</a>
+                    <a class="back-button" href="http://localhost:%s/sector/%s/submarine-measurements">Show submarine data</a>
                 </td>
             </tr>
             """,
@@ -152,17 +149,18 @@ public class WebApp {
                     sector.getOrDefault("height", "No data available"),
                     sector.getOrDefault("ground", "No data available"),
                     sector.getOrDefault("navigable", "No data available"),
+                    webAppPort,
                     sector.get("sectorID")
             ));
         }
 
-        String html = getHTMLBase("sectorData.html", rows);
+        String html = getHTMLBase("sectorData.html", Map.of("TABLE_ROWS", rows.toString()));
         renderHTML(exchange, html);
     }
 
     private void renderHomepage(HttpExchange exchange) throws IOException {
         StringBuilder data = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader("src/explorer/view/templates/" + "homepage.html"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/explorer/view/templates/homepage.html"))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 data.append(line);
@@ -171,7 +169,8 @@ public class WebApp {
             e.printStackTrace();
         }
 
-        String html = data.toString();
+        String html = data.toString()
+                .replace("WEBAPP_PORT_PLACEHOLDER", String.valueOf(webAppPort));
         renderHTML(exchange, html);
     }
 
@@ -208,7 +207,7 @@ public class WebApp {
             ));
         }
 
-        String html = getHTMLBase("shipRadarData.html", shipName, rows);
+        String html = getHTMLBase("shipRadarData.html", Map.of("SHIP_NAME", shipName, "TABLE_ROWS", rows.toString()));
         renderHTML(exchange, html);
     }
 
@@ -223,8 +222,8 @@ public class WebApp {
                     <td data-label='Active'>%s</td>
                     <td data-label='Ship data'>
                         <div class="button-container">
-                            <a class="back-button" href="http://localhost:8000/ship/%s/scan-results">Show ship scan data</a>
-                            <a class="back-button" href="http://localhost:8000/ship/%s/radar-results">Show ship radar data</a>
+                            <a class="back-button" href="http://localhost:%s/ship/%s/scan-results">Show ship scan data</a>
+                            <a class="back-button" href="http://localhost:%s/ship/%s/radar-results">Show ship radar data</a>
                         </div>
                     </td>
                 </tr>
@@ -232,12 +231,14 @@ public class WebApp {
                     ship.get("shipID"),
                     ship.get("name"),
                     ship.get("active"),
+                    webAppPort,
                     ship.get("shipID"),
+                    webAppPort,
                     ship.get("shipID")
             ));
         }
 
-        String html = getHTMLBase("shipData.html", rows);
+        String html = getHTMLBase("shipData.html", Map.of("TABLE_ROWS", rows.toString()));
         renderHTML(exchange, html);
     }
 
@@ -258,7 +259,7 @@ public class WebApp {
             ));
         }
 
-        String html = getHTMLBase("shipScanData.html", rows);
+        String html = getHTMLBase("shipScanData.html", Map.of("TABLE_ROWS", rows.toString()));
         renderHTML(exchange, html);
     }
 
@@ -291,7 +292,7 @@ public class WebApp {
             ));
         }
 
-        String html = getHTMLBase("submarineData.html", rows);
+        String html = getHTMLBase("submarineData.html", Map.of("TABLE_ROWS", rows.toString()));
         renderHTML(exchange, html);
     }
 }

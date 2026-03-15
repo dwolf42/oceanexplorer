@@ -31,6 +31,7 @@ public class Database {
     }
 
     public synchronized void insertSector(int x, int y) throws SQLException {
+        // position_x and position_y are set as UNIQUE, so if they already exist in the database the insert will be ignored (via INSERT IGNORE)
         String sql = "INSERT IGNORE INTO sector (position_x, position_y) VALUES (?, ?)";
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setInt(1, x);
@@ -38,7 +39,7 @@ public class Database {
         int affectedRows = stmt.executeUpdate();
 
         if (affectedRows == 0) {
-            System.out.println("Insert skipped");
+            System.out.println("Sector already exists in the database, insert skipped");
         }
     }
 
@@ -93,7 +94,7 @@ public class Database {
     public synchronized void insertShipRadarData(int shipDatabaseIdentifier, List<RadarEcho> echos) throws SQLException {
         String sql = "INSERT IGNORE INTO radar_results (ground, navigable, shipID, sectorID, height) " +
                 "VALUES (?, ?, ?, ?, ?)";
-        stmt2 = conn.prepareStatement(sql);
+        stmt = conn.prepareStatement(sql);
 
         for (RadarEcho echo : echos) {
             String ground = echo.getGround().toString();
@@ -116,18 +117,18 @@ public class Database {
                     sectorID = getSectorID(echoSectorVec);
                 }
 
-                stmt2.setString(1, ground);
-                stmt2.setString(2, navigable);
-                stmt2.setInt(3, shipDatabaseIdentifier);
-                stmt2.setInt(4, sectorID);
-                stmt2.setInt(5, height);
+                stmt.setString(1, ground);
+                stmt.setString(2, navigable);
+                stmt.setInt(3, shipDatabaseIdentifier);
+                stmt.setInt(4, sectorID);
+                stmt.setInt(5, height);
 
-                stmt2.addBatch();
+                stmt.addBatch();
             }
         }
 
-        stmt2.executeBatch();
-        stmt2.close();
+        stmt.executeBatch();
+        stmt.close();
     }
 
     public synchronized int insertSubmarineData(int shipDatabaseIdentifier, String serverSubID) throws SQLException {
@@ -138,7 +139,7 @@ public class Database {
 
         int affectedRows = stmt.executeUpdate();
         if (affectedRows == 0) {
-            System.out.println("Insert skipped");
+            System.out.println("Submarine already exists in the database, insert skipped");
         }
 
         int lastGeneratedKey = getGeneratedKey(stmt);
