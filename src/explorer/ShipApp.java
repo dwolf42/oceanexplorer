@@ -108,6 +108,7 @@ public class ShipApp {
 
 				submarineServer = new SubmarineServer(shipDatabaseIdentifier, sectorID);
 				submarineServer.start();
+				shipGui.updateWinTitle(this.shipID);
 				break;
 			case "message":
 				message(jsonObject);
