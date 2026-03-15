@@ -31,6 +31,7 @@ public class Database {
     }
 
     public synchronized void insertSector(int x, int y) throws SQLException {
+        // position_x and position_y are set as UNIQUE, so if they already exist in the database the insert will be ignored (via INSERT IGNORE)
         String sql = "INSERT IGNORE INTO sector (position_x, position_y) VALUES (?, ?)";
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setInt(1, x);
@@ -38,7 +39,7 @@ public class Database {
         int affectedRows = stmt.executeUpdate();
 
         if (affectedRows == 0) {
-            System.out.println("Insert skipped");
+            System.out.println("Insert sector in database is skipped");
         }
     }
 
@@ -137,8 +138,8 @@ public class Database {
         stmt.setString(2, serverSubID);
 
         int affectedRows = stmt.executeUpdate();
-        if (affectedRows == 0) {
-            System.out.println("Insert skipped");
+        if (affectedRows == 0) {                                        // it will be pr
+            System.out.println("Insert submarine data in DB skipped");
         }
 
         int lastGeneratedKey = getGeneratedKey(stmt);

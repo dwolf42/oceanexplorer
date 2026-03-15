@@ -91,7 +91,10 @@ public class Submarine extends Thread {
                 System.out.println("Ready Message: " + jsonObject);
 
                 this.serverSubID = jsonObject.get("id").toString();
+
+                // checks if submarine does not exist in the database (if subIdentifier is still 0 it has not been inserted yet)
                 if (subIdentifier == 0) {
+                    // inserts submarine into the database and assigns the generated primary key to the subIdentifier
                     subIdentifier = database.insertSubmarineData(shipDatabaseIdentifier, serverSubID);
                 }
 
