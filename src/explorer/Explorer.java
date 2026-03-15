@@ -7,7 +7,7 @@ import java.sql.SQLException;
 // Please note: code regarding the torpedo-feature is AI generated
 public class Explorer {
 
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) {
         try {
             WebApp webApp = new WebApp();
             webApp.startWebApplication();
