@@ -26,21 +26,15 @@ public class Explorer {
 	public void explore() throws InterruptedException, SQLException, IOException {
 		ShipApp shipApp = new ShipApp("Leopard1", "ship");
 		ShipGui shipGui;
-		synchronized (shipApp) {
-			// establish connection to OceanServer
-			if (shipApp.connectOS("127.0.0.1", 8150)) {
-				System.out.println("Connected to OceanServer");
-				shipGui = new ShipGui(shipApp);
-				shipApp.setShipGui(shipGui);
-				shipApp.launch();
-				shipGui.updateWinTitle(shipApp.getShipId());
-				shipApp.wait();
-			} else {
-				System.out.println("Failed to connect to OceanServer");
-			}
+		// establish connection to OceanServer
+		if (shipApp.connectOS("127.0.0.1", 8150)) {
+			System.out.println("Connected to OceanServer");
+			shipGui = new ShipGui(shipApp);
+			shipApp.setShipGui(shipGui);
+			shipApp.launch();
+		} else {
+			System.out.println("Failed to connect to OceanServer");
 		}
-
-
 	}
 
 }
