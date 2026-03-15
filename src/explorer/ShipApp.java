@@ -96,7 +96,7 @@ public class ShipApp {
 	}
 
 	// Process messages (JSON) from OceanServer
-	public synchronized void handleMessage(JSONObject jsonObject) throws InterruptedException, SQLException {
+	public void handleMessage(JSONObject jsonObject) throws InterruptedException, SQLException {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
 			case "launched":
@@ -131,7 +131,6 @@ public class ShipApp {
 			default:
 				System.out.println("Unknown Command: " + cmd);
 		}
-		notifyAll();
 	}
 
 	// Spawns a ship on the ocean
