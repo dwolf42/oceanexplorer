@@ -39,7 +39,7 @@ public class Database {
         int affectedRows = stmt.executeUpdate();
 
         if (affectedRows == 0) {
-            System.out.println("Insert sector in database is skipped");
+            System.out.println("Sector already exists in the database, insert skipped");
         }
     }
 
@@ -138,8 +138,8 @@ public class Database {
         stmt.setString(2, serverSubID);
 
         int affectedRows = stmt.executeUpdate();
-        if (affectedRows == 0) {                                        // it will be pr
-            System.out.println("Insert submarine data in DB skipped");
+        if (affectedRows == 0) {
+            System.out.println("Submarine already exists in the database, insert skipped");
         }
 
         int lastGeneratedKey = getGeneratedKey(stmt);
