@@ -98,9 +98,6 @@ public class ShipApp {
 	public synchronized void handleMessage(JSONObject jsonObject) throws InterruptedException, SQLException {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
-			case "launch":
-				oceanListener.out.println(jsonObject);
-				break;
 			case "launched":
 				this.shipID = jsonObject.get("id").toString();
 				System.out.printf("Launched: %s, ", this.shipID);
@@ -120,7 +117,6 @@ public class ShipApp {
 				if (!oldValueOfSector.equals(sector)) {
 					database.insertSector(sector.getX(), sector.getY());
 				}
-
 				break;
 			//	case "crash" -> crash();
 			//{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
@@ -138,14 +134,14 @@ public class ShipApp {
 	}
 
 	// Spawns a ship on the ocean
-	public void launch() throws InterruptedException, SQLException {
+	public void launch() {
 		this.sector = new Vec2D(40, 40);
 		this.direction = new Vec2D(0, 1);
 
 		jsonObject.put("cmd", "launch");
 		jsonObject.put("sector", this.sector.toJson());
 		jsonObject.put("dir", this.direction.toJson());
-		handleMessage(jsonObject);
+		oceanListener.out.println(jsonObject);
 	}
 
 	// Handles "message" command from OceanServer
