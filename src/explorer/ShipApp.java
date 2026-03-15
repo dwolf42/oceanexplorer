@@ -1,5 +1,6 @@
 package explorer;
 
+import explorer.view.ShipGui;
 import ocean.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,7 +14,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class ShipApp {
 	private Socket toOceanServer;
@@ -32,15 +32,9 @@ public class ShipApp {
 	private ArrayList<RadarEcho> echos;
 	private SubmarineServer submarineServer;
 	private Database database = new Database();
+	private ShipGui shipGui;
 
 	// Please note: code regarding the torpedo-feature is AI generated
-	/*
-		Ship Directons
-		nw = -1, 1     n = 0, 1     ne = 1, 1
-		w = -1, 0					e = 1, 0
-		sw = -1, -1	   s = 0, -1	se = 1, -1
-	 */
-
 	public ShipApp(String name, String typ) throws SQLException {
 		this.name = name;
 		this.typ = typ;
@@ -86,9 +80,6 @@ public class ShipApp {
 		}
 	}
 
-
-	// TODO: mariadb JDBC guide: https://mariadb.com/docs/connectors/connectors-quickstart-guides/mariadb-connector-j-guide
-
 	// Establish connection to OceanServer, initializes OceanListener and SubmarineServer
 	public boolean connectOS(String hostNameOS, int portOS) {
 		try {
@@ -103,23 +94,20 @@ public class ShipApp {
 		}
 	}
 
-	// TODO: navigation directly sends to server, probably put it in here
 	// Process messages (JSON) from OceanServer
-	public synchronized void handleMessage(JSONObject jsonObject) throws InterruptedException, SQLException {
+	public void handleMessage(JSONObject jsonObject) throws InterruptedException, SQLException {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
-			case "launch":
-				oceanListener.out.println(jsonObject);
-				break;
 			case "launched":
 				this.shipID = jsonObject.get("id").toString();
-				System.out.printf("Launched: %s, ", this.shipID);
+				this.shipGui.updateTextArea("Launched: " + this.shipID);
 
 				insertLaunchedDataInDatabase();
 				int sectorID = database.getSectorID(sector);
 
 				submarineServer = new SubmarineServer(shipDatabaseIdentifier, sectorID);
 				submarineServer.start();
+				shipGui.updateWinTitle(this.shipID);
 				break;
 			case "message":
 				message(jsonObject);
@@ -130,12 +118,11 @@ public class ShipApp {
 				if (!oldValueOfSector.equals(sector)) {
 					database.insertSector(sector.getX(), sector.getY());
 				}
-
 				break;
 			//	case "crash" -> crash();
 			//{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
 			case "scanned":
-				System.out.println("Scan Result: " + jsonObject.toString());
+				this.shipGui.updateTextArea("Sector scanned!");
 				insertScanResultsInDatabase(jsonObject);
 				break;
 			case "radarresponse":
@@ -144,33 +131,35 @@ public class ShipApp {
 			default:
 				System.out.println("Unknown Command: " + cmd);
 		}
-		notifyAll();
 	}
 
 	// Spawns a ship on the ocean
-	public void launch() throws InterruptedException, SQLException {
+	public void launch() {
 		this.sector = new Vec2D(40, 40);
 		this.direction = new Vec2D(0, 1);
 
 		jsonObject.put("cmd", "launch");
 		jsonObject.put("sector", this.sector.toJson());
 		jsonObject.put("dir", this.direction.toJson());
-		handleMessage(jsonObject);
+		oceanListener.out.println(jsonObject);
 	}
 
 	// Handles "message" command from OceanServer
 	public void message(JSONObject jsonObject) {
-		System.out.println("Message: " + jsonObject.toString());
+		String type = jsonObject.get("type").toString();
+		String text = jsonObject.get("text").toString();
+		this.shipGui.updateTextArea(type + ": " + text);
 	}
 
-	// Handles "move2d" command from OceanServer
+	// Updates sector and direction fields with new values, and displays them in the Gui
 	public void move2d(JSONObject jsonObject) {
 		this.sector = Vec2D.fromJson(jsonObject.getJSONObject("sector"));
 		this.direction = Vec2D.fromJson(jsonObject.getJSONObject("dir"));
 		jsonObject.put("sector", this.sector.toJson());
 		jsonObject.put("dir", this.direction.toJson());
-		System.out.printf("Current position: %s, ", this.sector.toString());
-		System.out.printf("Current direction: %s\n", this.direction.toString());
+
+		this.shipGui.updateTextArea("Current position: " + this.sector.toString());
+		this.shipGui.updateTextArea("Current direction: " + this.direction.toString());
 	}
 
 	// Builds the JSON to be sent to OceanServer for updating ship location
@@ -194,7 +183,7 @@ public class ShipApp {
 
 	// Handles radar responses from OceanServer
 	public void radarresponse(JSONObject jsonObject) {
-		System.out.println("Response: " + jsonObject.toString());
+
         JSONArray response = jsonObject.getJSONArray("echos");
 		echos = new ArrayList<>();
 
@@ -205,11 +194,11 @@ public class ShipApp {
 
         try {
             database.insertShipRadarData(this.shipDatabaseIdentifier, echos);
+			this.shipGui.updateTextArea("Sourrounding sectors scanned!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        System.out.println(echos);
 	}
 
     private void insertLaunchedDataInDatabase() throws SQLException {
@@ -226,18 +215,15 @@ public class ShipApp {
         database.insertShipScanData(totalDepthAverage, standardDeviation, sector, this.shipDatabaseIdentifier);
 
     }
+
 	// The gui's exit button interrupts SubmarineServer, sends exit to OceanServer and interrupts OceanListener
 	// before ending the current main thread
 	public void exit() {
 		submarineServer.interrupt();
 		oceanListener.out.println(new JSONObject().put("cmd", "exit"));
 		oceanListener.interrupt();
-		Thread.currentThread().interrupt();
-	}
-
-	// ShipGui uses this to display the ship's name in the window title
-	public String getShipId() {
-		return this.shipID;
+		database.close();
+		System.exit(0);
 	}
 
 	// Spawns a new submarine, which communicates via SubmarineServer
@@ -251,4 +237,7 @@ public class ShipApp {
 		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
 	}
 
+	public void setShipGui(ShipGui shipGui) {
+		this.shipGui = shipGui;
+	}
 }
