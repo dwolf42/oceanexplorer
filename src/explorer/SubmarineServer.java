@@ -5,8 +5,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 
@@ -21,6 +19,7 @@ class SubmarineServer extends Thread {
 	private int shipDatabaseIdentifier;
 	private int sectorID;
 	private boolean nextIsTorpedo = false;
+	private boolean hasSubmarineControlStarted = false;
 
 	// Waits for a Submarine spawned by OceanServer to request for a socket, with which the Submarine communicate to ShipApp
 	public SubmarineServer(int shipDatabaseIdentifier, int sectorID) {
@@ -35,7 +34,6 @@ class SubmarineServer extends Thread {
 	public void run() {
 		try {
 			subSocket = new ServerSocket(8152);
-			startSubmarineControl();
 
 			while (!isInterrupted()) {
 				Socket client = subSocket.accept();
@@ -43,11 +41,19 @@ class SubmarineServer extends Thread {
 				this.nextIsTorpedo = false;
 				submarine.start();
 				submarines.add(submarine);
+				// Prevents NEP in startSubmarineControl
+				Thread.sleep(2000);
+				if (!hasSubmarineControlStarted) {
+					hasSubmarineControlStarted = true;
+					startSubmarineControl();
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
 		} finally {
 			// After thread ends, this iterates through the submarines array list so they are interrupt properly
 			submarines.forEach(Submarine::interrupt);
@@ -72,7 +78,7 @@ class SubmarineServer extends Thread {
 
 				while (!self.isInterrupted()) {
 					if (submarines.isEmpty()) {
-						continue;
+						break;
 					}
 					availableSubmarineIDs = new ArrayList<>();
 					System.err.println("Submarine control ready. Input Submarine ID (numerical e.g. 01, 02...) and direction.");
@@ -107,7 +113,8 @@ class SubmarineServer extends Thread {
 
 					Submarine target = null;
 					for (Submarine sub : submarines) {
-						if (sub.getSubServerID().equals(inputSubID)) {
+						String numericID = sub.getSubServerID().split("#")[1].replace("sub", ""); // NEU
+						if (numericID.equals(inputSubID)) {
 							target = sub;
 							break;
 						}
