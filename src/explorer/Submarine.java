@@ -163,4 +163,12 @@ public class Submarine extends Thread {
 		}
 	}
 
+	public String getSubServerID() {
+		return this.serverSubID;
+	}
+
+	public void setRoute(String route) {
+		out.println(new JSONObject().put("cmd", "pilot").put("route", route));
+	}
+
 }

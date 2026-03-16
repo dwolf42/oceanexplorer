@@ -20,7 +20,7 @@ public class Database {
     // !!!
     static final String DB_URL = "jdbc:mariadb://localhost:3306/ocean_explorer";
     static final String USER = "root";
-    static final String PASS = "Kk3s9d_Bj9uJbrwc4uzWJA9tceNkVMMjDG";
+    static final String PASS = "password";
 
     public Database() throws SQLException {
         this.conn = this.getConnection();
