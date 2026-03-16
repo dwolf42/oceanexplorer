@@ -18,9 +18,9 @@ public class Database {
     // !!!
     // TODO: DB_URL and PASS should be adjusted depending on the real credentials for the database
     // !!!
-    static final String DB_URL = "jdbc:mariadb://localhost:3307/ocean_explorer";
+    static final String DB_URL = "jdbc:mariadb://localhost:3306/ocean_explorer";
     static final String USER = "root";
-    static final String PASS = "OvoJeSamoPswZaMariaDB5.(0)!";
+    static final String PASS = "Kk3s9d_Bj9uJbrwc4uzWJA9tceNkVMMjDG";
 
     public Database() throws SQLException {
         this.conn = this.getConnection();
