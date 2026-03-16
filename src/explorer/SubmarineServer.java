@@ -1,20 +1,14 @@
 package explorer;
 
-import ocean.AppLauncher;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Scanner;
 
 // Please note: code regarding the torpedo-feature is AI generated
 // SubmarineServer has been extracted to a separate class to prevent ShipApp from cludder
@@ -28,7 +22,7 @@ class SubmarineServer extends Thread {
 	private int sectorID;
 	private boolean nextIsTorpedo = false;
 
-
+	// Waits for a Submarine spawned by OceanServer to request for a socket, with which the Submarine communicate to ShipApp
 	public SubmarineServer(int shipDatabaseIdentifier, int sectorID) {
 		this.shipDatabaseIdentifier = shipDatabaseIdentifier;
 		this.sectorID = sectorID;
@@ -41,19 +35,20 @@ class SubmarineServer extends Thread {
 	public void run() {
 		try {
 			subSocket = new ServerSocket(8152);
+			startSubmarineControl();
 
 			while (!isInterrupted()) {
 				Socket client = subSocket.accept();
 				Submarine submarine = new Submarine(client, shipDatabaseIdentifier, sectorID, this.nextIsTorpedo);
 				this.nextIsTorpedo = false;
 				submarine.start();
-					submarines.add(submarine);
+				submarines.add(submarine);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
+			e.printStackTrace();
+		} finally {
 			// After thread ends, this iterates through the submarines array list so they are interrupt properly
 			submarines.forEach(Submarine::interrupt);
 			if (subSocket != null) {
@@ -66,4 +61,66 @@ class SubmarineServer extends Thread {
 		}
 	}
 
+	private void startSubmarineControl() {
+		// Reference to SubmarineServer, so the runnable here can stop if the server stops
+		SubmarineServer self = this;
+		Runnable subControlRunnable = new Runnable() {
+			public void run() {
+				Scanner scanner = new Scanner(System.in);
+				// Contains the submarineIDs of available (spawned) submarines to make it easier to verify whether the user's desired submarine is available
+				ArrayList<String> availableSubmarineIDs;
+
+				while (!self.isInterrupted()) {
+					if (submarines.isEmpty()) {
+						continue;
+					}
+					availableSubmarineIDs = new ArrayList<>();
+					System.err.println("Submarine control ready. Input Submarine ID (numerical e.g. 01, 02...) and direction.");
+					System.err.println("Available SubmarineIDs:");
+					// Temporarily save submarineId so it can be print and put in the ArrayList
+					String tempSubID;
+					for (Submarine sub : submarines) {
+						tempSubID = sub.getSubServerID();
+						// To only save the numerical pf the submarineID
+						availableSubmarineIDs.add(tempSubID.split("#")[1].replace("sub", ""));
+						System.err.println(tempSubID);
+					}
+					System.err.println(" ");
+					System.err.println("---------------");
+					System.err.println("Directions are:");
+					System.err.println("NW, N, NE");
+					System.err.println("W,  C, E");
+					System.err.println("SW, S, SE");
+					System.err.println("UP, DOWN");
+					System.err.println("---------------");
+					System.err.println(" ");
+
+					System.err.println("Input Submarine ID: ");
+					String inputSubID = scanner.nextLine().trim();
+					System.err.println("Input direction: ");
+					String inputSubRoute = scanner.nextLine().toUpperCase().trim();
+
+					if (!availableSubmarineIDs.contains(inputSubID)) {
+						System.err.println("Invalid submarine ID ");
+						continue;
+					}
+
+					Submarine target = null;
+					for (Submarine sub : submarines) {
+						if (sub.getSubServerID().equals(inputSubID)) {
+							target = sub;
+							break;
+						}
+					}
+
+					if (target != null) {
+						target.setRoute(inputSubRoute);
+						System.err.println("Sent route " + inputSubRoute + " to " + inputSubID);
+					}
+				}
+			}
+		};
+		Thread subControlThread = new Thread(subControlRunnable);
+		subControlThread.start();
+	}
 }
