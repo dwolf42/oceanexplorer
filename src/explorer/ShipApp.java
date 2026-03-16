@@ -102,7 +102,7 @@ public class ShipApp {
 				this.shipID = jsonObject.get("id").toString();
 				this.shipGui.updateTextArea("Launched: " + this.shipID);
 
-				insertLaunchedDataInDatabase();
+				this.insertLaunchedDataInDatabase();
 				int sectorID = database.getSectorID(sector);
 
 				submarineServer = new SubmarineServer(shipDatabaseIdentifier, sectorID);
@@ -119,8 +119,13 @@ public class ShipApp {
 					database.insertSector(sector.getX(), sector.getY());
 				}
 				break;
-			//	case "crash" -> crash();
-			//{"depth":-34,"cmd":"scanned","id":"#0#The Ship","stddev":12.487269}
+            case "crash":
+                System.out.println(jsonObject);
+                System.out.println(shipDatabaseIdentifier);
+                database.setShipStatusAsInactive(shipDatabaseIdentifier);
+
+			    //{"sunkPos":{"vec":[4050,3150,1]},"cmd":"crash","id":"#1#Leopard1","message":"CRASH: ship run ashore","sector":{"vec2":[40,31]}}
+                break;
 			case "scanned":
 				this.shipGui.updateTextArea("Sector scanned!");
 				insertScanResultsInDatabase(jsonObject);
@@ -202,8 +207,6 @@ public class ShipApp {
 	}
 
     private void insertLaunchedDataInDatabase() throws SQLException {
-        database.insertSector(sector.getX(), sector.getY());
-
         String shipName = shipID.split("#")[2];
         this.shipDatabaseIdentifier = database.insertShipData(shipID, shipName);
     }

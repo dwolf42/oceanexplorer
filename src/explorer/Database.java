@@ -18,9 +18,9 @@ public class Database {
     // !!!
     // TODO: DB_URL and PASS should be adjusted depending on the real credentials for the database
     // !!!
-    static final String DB_URL = "jdbc:mariadb://localhost:3306/ocean_explorer";
+    static final String DB_URL = "jdbc:mariadb://localhost:3307/ocean_explorer";
     static final String USER = "root";
-    static final String PASS = "Kk3s9d_Bj9uJbrwc4uzWJA9tceNkVMMjDG";
+    static final String PASS = "OvoJeSamoPswZaMariaDB5.(0)!";
 
     public Database() throws SQLException {
         this.conn = this.getConnection();
@@ -552,4 +552,14 @@ public class Database {
         }
     }
 
+    public void setShipStatusAsInactive(int shipID) throws SQLException {
+        String sql2 = "UPDATE ship SET active = ? WHERE shipID = ?";
+
+        stmt = conn.prepareStatement(sql2);
+        stmt.setString(1, "No");
+        stmt.setInt(2, shipID);
+        stmt.executeUpdate();
+
+        stmt.close();
+    }
 }
