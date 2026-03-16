@@ -552,4 +552,14 @@ public class Database {
         }
     }
 
+    public void setShipStatusAsInactive(int shipID) throws SQLException {
+        String sql2 = "UPDATE ship SET active = ? WHERE shipID = ?";
+
+        stmt = conn.prepareStatement(sql2);
+        stmt.setString(1, "No");
+        stmt.setInt(2, shipID);
+        stmt.executeUpdate();
+
+        stmt.close();
+    }
 }
