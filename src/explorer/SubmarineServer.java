@@ -41,19 +41,10 @@ class SubmarineServer extends Thread {
 				this.nextIsTorpedo = false;
 				submarine.start();
 				submarines.add(submarine);
-				// Prevents NEP in startSubmarineControl
-				Thread.sleep(3000);
-				if (!hasSubmarineControlStarted) {
-					hasSubmarineControlStarted = true;
-					startSubmarineControl();
-				}
+				startSubmarineControl();
 			}
-		} catch (IOException e) {
+		} catch (IOException | SQLException e) {
 			e.printStackTrace();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
 		} finally {
 			// After thread ends, this iterates through the submarines array list so they are interrupt properly
 			submarines.forEach(Submarine::interrupt);
@@ -75,7 +66,6 @@ class SubmarineServer extends Thread {
 				Scanner scanner = new Scanner(System.in);
 				// Contains the submarineIDs of available (spawned) submarines to make it easier to verify whether the user's desired submarine is available
 				ArrayList<String> availableSubmarineIDs;
-
 				while (!self.isInterrupted()) {
 					if (submarines.isEmpty()) {
 						break;
@@ -87,6 +77,9 @@ class SubmarineServer extends Thread {
 					String tempSubID = "";
 					for (Submarine sub : submarines) {
 						tempSubID = sub.getSubServerID();
+						if (null == tempSubID) {
+							continue;
+						}
 						// To only save the numerical pf the submarineID
 						availableSubmarineIDs.add(tempSubID.split("#")[1].replace("sub", ""));
 						System.err.println(tempSubID);
