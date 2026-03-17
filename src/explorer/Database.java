@@ -95,6 +95,7 @@ public class Database {
         for (RadarEcho echo : echos) {
             String ground = echo.getGround().toString();
 
+            // If the ground is null, it means the scanned sector is outside the ocean, so we skip saving it to the database
             if(!ground.equals("None")) {
                 String navigable = "Yes";
 

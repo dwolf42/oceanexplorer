@@ -17,6 +17,7 @@ public class WebApp {
     public WebApp() throws SQLException {
     }
 
+    // We start a simple HTTP server, maps routes for dynamic and static content, and begins listening on the specified port
     public void startWebApplication() throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(webAppPort), 0);
         server.createContext("/", this::handleRequest);
@@ -25,6 +26,7 @@ public class WebApp {
         System.out.println("Open http://localhost:" + webAppPort + "/");
     }
 
+    //A small router for the web app with the main branches: ships, sectors and submarines
     public void handleRequest(HttpExchange exchange) {
         try {
             String path = exchange.getRequestURI().getPath();
@@ -61,6 +63,7 @@ public class WebApp {
         }
     }
 
+    // Info to server that static files should be read and rendered
     private void handleStaticFiles(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         String filePath = "src/explorer/view" + path;
@@ -80,6 +83,7 @@ public class WebApp {
         exchange.getResponseBody().close();
     }
 
+    // We read the html templates and replace each placeholder from the templates with the correct value to make them dynamic
     private String getHTMLBase(String htmlTemplateName, Map<String, String> placeholders) {
         StringBuilder data = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new FileReader("src/explorer/view/templates/" + htmlTemplateName))) {
@@ -90,6 +94,7 @@ public class WebApp {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
 
         String html = data.toString().replace("WEBAPP_PORT_PLACEHOLDER", String.valueOf(webAppPort));
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
