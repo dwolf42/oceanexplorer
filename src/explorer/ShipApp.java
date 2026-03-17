@@ -100,12 +100,11 @@ public class ShipApp {
 		switch (cmd) {
 			case "launched":
 				this.shipID = jsonObject.get("id").toString();
-				this.shipGui.updateTextArea("Launched: " + this.shipID);
+				this.shipGui.updateTextArea("---- Ship " + this.name + " launched! ----");
 
 				this.insertLaunchedDataInDatabase();
-				int sectorID = database.getSectorID(sector);
 
-				submarineServer = new SubmarineServer(shipDatabaseIdentifier, sectorID);
+				submarineServer = new SubmarineServer(shipDatabaseIdentifier, sector);
 				submarineServer.start();
 				shipGui.updateWinTitle(this.shipID);
 				break;
@@ -113,22 +112,28 @@ public class ShipApp {
 				message(jsonObject);
 				break;
 			case "move2d":
-				Vec2D oldValueOfSector = sector;
 				move2d(jsonObject);
-				if (!oldValueOfSector.equals(sector)) {
-					database.insertSector(sector.getX(), sector.getY());
-				}
 				break;
             case "crash":
-                System.out.println(jsonObject);
-                System.out.println(shipDatabaseIdentifier);
-                database.setShipStatusAsInactive(shipDatabaseIdentifier);
+                shipGui.updateTextArea(this.name + " was crashed. System ends");
 
-			    //{"sunkPos":{"vec":[4050,3150,1]},"cmd":"crash","id":"#1#Leopard1","message":"CRASH: ship run ashore","sector":{"vec2":[40,31]}}
+                JSONObject crashPos = (JSONObject) jsonObject.query("/sunkPos");
+                JSONArray vecCrash = crashPos.getJSONArray("vec");
+
+                database.insertShipCrashData (shipDatabaseIdentifier,
+                        vecCrash.getInt(0),
+                        vecCrash.getInt(1),
+                        vecCrash.getInt(2)
+                );
+
+                // wait 1 sec and exit the program to have some time for user to see the text that comes from "shipGui.updateTextArea(this.name + " crashed");"
+                Thread.sleep(2000);
+                this.exit();
                 break;
 			case "scanned":
 				this.shipGui.updateTextArea("Sector scanned!");
-				insertScanResultsInDatabase(jsonObject);
+                database.insertSector(sector.getX(), sector.getY());
+                this.insertScanResultsInDatabase(jsonObject);
 				break;
 			case "radarresponse":
 				radarresponse(jsonObject);
@@ -197,6 +202,8 @@ public class ShipApp {
 			echos.add(re);
 		}
 
+        this.shipGui.updateTextArea("Radar response " + echos);
+
         try {
             database.insertShipRadarData(this.shipDatabaseIdentifier, echos);
 			this.shipGui.updateTextArea("Sourrounding sectors scanned!");
@@ -215,24 +222,17 @@ public class ShipApp {
         int totalDepthAverage = jsonObject.getInt("depth");
         float standardDeviation = jsonObject.getFloat("stddev");
 
+        this.shipGui.updateTextArea("Depth of the sector " + sector.getX() + "," + sector.getY() + " is " + totalDepthAverage);
+        this.shipGui.updateTextArea("Standard deviation: " + standardDeviation);
+
         database.insertShipScanData(totalDepthAverage, standardDeviation, sector, this.shipDatabaseIdentifier);
-
     }
-
-	// The gui's exit button interrupts SubmarineServer, sends exit to OceanServer and interrupts OceanListener
-	// before ending the current main thread
-	public void exit() {
-		submarineServer.interrupt();
-		oceanListener.out.println(new JSONObject().put("cmd", "exit"));
-		oceanListener.interrupt();
-		database.close();
-		System.exit(0);
-	}
 
 	// Spawns a new submarine, which communicates via SubmarineServer
 	public void deploySubmarine() {
 		AppLauncher.startSubmarine("src/", shipID, submarineServerHost, submarineServerPort, oceanServerHost, oceanServerPortForSubmarines);
-	}
+        this.shipGui.updateTextArea("---- Submarine dropped ----");
+    }
 
 	// Spawns a new submarine which acts like a torpedo by propelling mindlessly ahead
 	public void launchTorpedo() {
@@ -243,4 +243,15 @@ public class ShipApp {
 	public void setShipGui(ShipGui shipGui) {
 		this.shipGui = shipGui;
 	}
+
+    // The gui's exit button interrupts SubmarineServer, sends exit to OceanServer and interrupts OceanListener
+    // before ending the current main thread
+    public void exit() throws SQLException {
+        database.updateShipState(shipDatabaseIdentifier);
+        submarineServer.interrupt();
+        oceanListener.out.println(new JSONObject().put("cmd", "exit"));
+        oceanListener.interrupt();
+        database.close();
+        System.exit(0);
+    }
 }

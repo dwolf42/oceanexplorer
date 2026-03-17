@@ -7,6 +7,7 @@ import ocean.Rudder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 // Please note: code regarding the torpedo-feature is AI generated
@@ -57,9 +58,13 @@ public class ButtonFactory {
 		bExit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
-				shipGui.exit();
-				shipApp.exit();
-			}
+                try {
+                    shipGui.exit();
+                    shipApp.exit();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
 		});
 		buttons.add(bExit);
 

@@ -36,11 +36,7 @@ public class Database {
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setInt(1, x);
         stmt.setInt(2, y);
-        int affectedRows = stmt.executeUpdate();
-
-        if (affectedRows == 0) {
-            System.out.println("Sector already exists in the database, insert skipped");
-        }
+        stmt.executeUpdate();
     }
 
     public synchronized int insertShipData(String shipIdentifierFromServer, String shipName) throws SQLException {
@@ -164,11 +160,11 @@ public class Database {
 
         stmt.close();
 
-        String sql2 = "UPDATE submarine SET arise_positionID = ?, active = ? WHERE submarineID = ?";
+        String sql2 = "UPDATE submarine SET arise_positionID = ?, surfaced = ? WHERE submarineID = ?";
 
         stmt2 = conn.prepareStatement(sql2);
         stmt2.setInt(1, lastGeneratedKey);
-        stmt2.setString(2, "No");
+        stmt2.setString(2, "Yes");
         stmt2.setInt(3, subIdentifier);
         stmt2.executeUpdate();
 
@@ -192,13 +188,12 @@ public class Database {
 
         stmt.close();
 
-        String sql2 = "UPDATE submarine SET sink_positionID = ?, active = ?, sunk = ? WHERE submarineID = ?";
+        String sql2 = "UPDATE submarine SET sink_positionID = ?, sunk = ? WHERE submarineID = ?";
 
         stmt2 = conn.prepareStatement(sql2);
         stmt2.setInt(1, lastGeneratedKey);
-        stmt2.setString(2, "No");
-        stmt2.setString(3, "Yes");
-        stmt2.setInt(4, subIdentifier);
+        stmt2.setString(2, "Yes");
+        stmt2.setInt(3, subIdentifier);
         stmt2.executeUpdate();
 
         stmt2.close();
@@ -234,6 +229,10 @@ public class Database {
             ship.put("shipID", rs.getInt("shipID"));
             ship.put("name", rs.getString("name"));
             ship.put("active", rs.getString("active"));
+            ship.put("server_ship_id", rs.getString("server_ship_id"));
+            ship.put("crash_position_x", rs.getString("crash_position_x"));
+            ship.put("crash_position_y", rs.getString("crash_position_y"));
+            ship.put("crash_position_z", rs.getString("crash_position_z"));
             ships.add(ship);
         }
 
@@ -552,10 +551,25 @@ public class Database {
         }
     }
 
-    public void setShipStatusAsInactive(int shipID) throws SQLException {
-        String sql2 = "UPDATE ship SET active = ? WHERE shipID = ?";
+    public void insertShipCrashData(int shipID, int crashPosX, int crashPosY, int crashPosZ) throws SQLException {
+        String sql = "UPDATE ship " +
+                "SET crash_position_x = ?, crash_position_y = ?, crash_position_z = ? " +
+                "WHERE shipID = ?";
 
-        stmt = conn.prepareStatement(sql2);
+        stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, crashPosX);
+        stmt.setInt(2, crashPosY);
+        stmt.setInt(3, crashPosZ);
+        stmt.setInt(4, shipID);
+        stmt.executeUpdate();
+
+        stmt.close();
+    }
+
+    public void updateShipState(int shipID) throws SQLException {
+        String sql = "UPDATE ship SET active = ? WHERE shipID = ?";
+
+        stmt = conn.prepareStatement(sql);
         stmt.setString(1, "No");
         stmt.setInt(2, shipID);
         stmt.executeUpdate();

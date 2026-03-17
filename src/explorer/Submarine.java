@@ -1,5 +1,7 @@
 package explorer;
 
+import ocean.Vec;
+import ocean.Vec2D;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -22,15 +24,16 @@ public class Submarine extends Thread {
 	private int shipDatabaseIdentifier;         // Primary key of the ship in the database
 	private String serverSubID;                 // Submarine ID received from the server
 	private int subIdentifier = 0;                  // Primary key of the submarine in the database
-	private int sectorID;
+	private Vec2D sectorCoordinates;
+    private int sectorID = 0;
 
 	private boolean torpedoMode;
 	private Thread torpedoThread;
 
-	public Submarine(Socket connection, int shipDatabaseIdentifier, int sectorID, boolean torpedoMode) throws SQLException {
+	public Submarine(Socket connection, int shipDatabaseIdentifier, Vec2D sectorCoordinates, boolean torpedoMode) throws SQLException {
 		this.connection = connection;
 		this.shipDatabaseIdentifier = shipDatabaseIdentifier;
-		this.sectorID = sectorID;
+		this.sectorCoordinates = sectorCoordinates;
 		this.torpedoMode = torpedoMode;
 		try {
 			in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -87,11 +90,13 @@ public class Submarine extends Thread {
 		switch (cmd) {
             case "ready":
                 this.serverSubID = jsonObject.get("id").toString();
+
                 // checks if submarine does not exist in the database (if subIdentifier is still 0 it has not been inserted yet)
                 if (subIdentifier == 0) {
                     // inserts submarine into the database and assigns the generated primary key to the subIdentifier
                     subIdentifier = database.insertSubmarineData(shipDatabaseIdentifier, serverSubID);
                 }
+
 				if (torpedoMode) startTorpedoMode();
 				break;
             case "message":
@@ -112,6 +117,13 @@ public class Submarine extends Thread {
                     z = vec.getInt(2);
                 }
 
+                // If the sector does not exist in the sectors table (sectorID == 0),
+                // insert it first and then retrieve its ID from the database
+                if(sectorID == 0) {
+                    database.insertSector(sectorCoordinates.getX(), sectorCoordinates.getY());
+                    sectorID = database.getSectorID(sectorCoordinates);
+                }
+
                 database.insertSubMeasurements(subIdentifier, sectorID, x, y, z);
                 break;
             case "crash":
@@ -127,6 +139,7 @@ public class Submarine extends Thread {
                         vecCrash.getInt(2),
                         subIdentifier
                 );
+                exit();
                 break;
             case "arise":
                 System.out.println("Arise Message: " + jsonObject);
