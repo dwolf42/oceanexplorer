@@ -42,10 +42,20 @@ class SubmarineServer extends Thread {
 				this.nextIsTorpedo = false;
 				submarine.start();
 				submarines.add(submarine);
-				startSubmarineControl();
+
+				// This sleep is here so Submarine has time to spawn before the control will access is.
+				// Time may be reduced/increased depending on system performance
+				Thread.sleep(5000); // wait for Submarine to spawn
+				// prevents submarine control from starting multiple times
+				if (!hasSubmarineControlStarted) {
+					hasSubmarineControlStarted = true;
+					startSubmarineControl();
+				}
 			}
 		} catch (IOException | SQLException e) {
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
 		} finally {
 			// After thread ends, this iterates through the submarines array list so they are interrupt properly
 			submarines.forEach(Submarine::interrupt);
