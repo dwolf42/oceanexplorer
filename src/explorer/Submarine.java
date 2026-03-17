@@ -86,7 +86,6 @@ public class Submarine extends Thread {
 		String cmd = jsonObject.get("cmd").toString();
 		switch (cmd) {
             case "ready":
-                System.out.println("Ready Message: " + jsonObject);
                 this.serverSubID = jsonObject.get("id").toString();
                 // checks if submarine does not exist in the database (if subIdentifier is still 0 it has not been inserted yet)
                 if (subIdentifier == 0) {
