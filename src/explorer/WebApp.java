@@ -297,7 +297,7 @@ public class WebApp {
                 <td data-label='Sink position z'>%s</td>
                 <td data-label='Arise position x'>%s</td>
                 <td data-label='Arise position y'>%s</td>
-                <td data-label='Active'>%s</td>
+                <td data-label='Surfaced'>%s</td>
                 <td data-label='Sunk'>%s</td>
             </tr>
             """,
@@ -308,7 +308,7 @@ public class WebApp {
                     submarineData.get("sinkPositionZ"),
                     submarineData.get("arisePositionX"),
                     submarineData.get("arisePositionY"),
-                    submarineData.get("active"),
+                    submarineData.get("surfaced"),
                     submarineData.get("sunk")
             ));
         }

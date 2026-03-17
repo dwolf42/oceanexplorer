@@ -103,9 +103,8 @@ public class ShipApp {
 				this.shipGui.updateTextArea("---- Ship " + this.name + " launched! ----");
 
 				this.insertLaunchedDataInDatabase();
-				int sectorID = database.getSectorID(sector);
 
-				submarineServer = new SubmarineServer(shipDatabaseIdentifier, sectorID);
+				submarineServer = new SubmarineServer(shipDatabaseIdentifier, sector);
 				submarineServer.start();
 				shipGui.updateWinTitle(this.shipID);
 				break;
@@ -113,11 +112,7 @@ public class ShipApp {
 				message(jsonObject);
 				break;
 			case "move2d":
-				Vec2D oldValueOfSector = sector;
 				move2d(jsonObject);
-				if (!oldValueOfSector.equals(sector)) {
-					database.insertSector(sector.getX(), sector.getY());
-				}
 				break;
             case "crash":
                 shipGui.updateTextArea(this.name + " was crashed. System ends");
@@ -137,7 +132,8 @@ public class ShipApp {
                 break;
 			case "scanned":
 				this.shipGui.updateTextArea("Sector scanned!");
-				insertScanResultsInDatabase(jsonObject);
+                database.insertSector(sector.getX(), sector.getY());
+                this.insertScanResultsInDatabase(jsonObject);
 				break;
 			case "radarresponse":
 				radarresponse(jsonObject);
@@ -206,6 +202,8 @@ public class ShipApp {
 			echos.add(re);
 		}
 
+        this.shipGui.updateTextArea("Radar response " + echos);
+
         try {
             database.insertShipRadarData(this.shipDatabaseIdentifier, echos);
 			this.shipGui.updateTextArea("Sourrounding sectors scanned!");
@@ -224,23 +222,11 @@ public class ShipApp {
         int totalDepthAverage = jsonObject.getInt("depth");
         float standardDeviation = jsonObject.getFloat("stddev");
 
-        this.shipGui.updateTextArea("Depth of the sector: " + sector + " is " + totalDepthAverage);
+        this.shipGui.updateTextArea("Depth of the sector " + sector.getX() + "," + sector.getY() + " is " + totalDepthAverage);
         this.shipGui.updateTextArea("Standard deviation: " + standardDeviation);
 
         database.insertShipScanData(totalDepthAverage, standardDeviation, sector, this.shipDatabaseIdentifier);
-
     }
-
-	// The gui's exit button interrupts SubmarineServer, sends exit to OceanServer and interrupts OceanListener
-	// before ending the current main thread
-	public void exit() throws SQLException {
-        database.updateShipState(shipDatabaseIdentifier);
-		submarineServer.interrupt();
-		oceanListener.out.println(new JSONObject().put("cmd", "exit"));
-		oceanListener.interrupt();
-		database.close();
-		System.exit(0);
-	}
 
 	// Spawns a new submarine, which communicates via SubmarineServer
 	public void deploySubmarine() {
@@ -257,4 +243,15 @@ public class ShipApp {
 	public void setShipGui(ShipGui shipGui) {
 		this.shipGui = shipGui;
 	}
+
+    // The gui's exit button interrupts SubmarineServer, sends exit to OceanServer and interrupts OceanListener
+    // before ending the current main thread
+    public void exit() throws SQLException {
+        database.updateShipState(shipDatabaseIdentifier);
+        submarineServer.interrupt();
+        oceanListener.out.println(new JSONObject().put("cmd", "exit"));
+        oceanListener.interrupt();
+        database.close();
+        System.exit(0);
+    }
 }

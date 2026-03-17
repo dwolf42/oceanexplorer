@@ -36,11 +36,7 @@ public class Database {
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setInt(1, x);
         stmt.setInt(2, y);
-        int affectedRows = stmt.executeUpdate();
-
-        if (affectedRows == 0) {
-            System.out.println("Sector already exists in the database, insert skipped");
-        }
+        stmt.executeUpdate();
     }
 
     public synchronized int insertShipData(String shipIdentifierFromServer, String shipName) throws SQLException {
@@ -168,7 +164,7 @@ public class Database {
 
         stmt2 = conn.prepareStatement(sql2);
         stmt2.setInt(1, lastGeneratedKey);
-        stmt2.setString(2, "No");
+        stmt2.setString(2, "Yes");
         stmt2.setInt(3, subIdentifier);
         stmt2.executeUpdate();
 
@@ -192,13 +188,12 @@ public class Database {
 
         stmt.close();
 
-        String sql2 = "UPDATE submarine SET sink_positionID = ?, surfaced = ?, sunk = ? WHERE submarineID = ?";
+        String sql2 = "UPDATE submarine SET sink_positionID = ?, sunk = ? WHERE submarineID = ?";
 
         stmt2 = conn.prepareStatement(sql2);
         stmt2.setInt(1, lastGeneratedKey);
-        stmt2.setString(2, "No");
-        stmt2.setString(3, "Yes");
-        stmt2.setInt(4, subIdentifier);
+        stmt2.setString(2, "Yes");
+        stmt2.setInt(3, subIdentifier);
         stmt2.executeUpdate();
 
         stmt2.close();
