@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import ocean.Vec2D;
 
 // Please note: code regarding the torpedo-feature is AI generated
 // SubmarineServer has been extracted to a separate class to prevent ShipApp from cludder
@@ -17,14 +18,14 @@ class SubmarineServer extends Thread {
 	// Holds all Submaines, so they can be interrupted once the
 	private List<Submarine> submarines = new ArrayList<>();
 	private int shipDatabaseIdentifier;
-	private int sectorID;
+	private Vec2D sectorCoordinates;
 	private boolean nextIsTorpedo = false;
 	private boolean hasSubmarineControlStarted = false;
 
-	// Waits for a Submarine spawned by OceanServer to request for a socket, with which the Submarine communicate to ShipApp
-	public SubmarineServer(int shipDatabaseIdentifier, int sectorID) {
+
+	public SubmarineServer(int shipDatabaseIdentifier, Vec2D sector) {
 		this.shipDatabaseIdentifier = shipDatabaseIdentifier;
-		this.sectorID = sectorID;
+		this.sectorCoordinates = sector;
 	}
 
 	public void setNextIsTorpedo(boolean nextIsTorpedo) {
@@ -37,7 +38,7 @@ class SubmarineServer extends Thread {
 
 			while (!isInterrupted()) {
 				Socket client = subSocket.accept();
-				Submarine submarine = new Submarine(client, shipDatabaseIdentifier, sectorID, this.nextIsTorpedo);
+				Submarine submarine = new Submarine(client, shipDatabaseIdentifier, sectorCoordinates, this.nextIsTorpedo);
 				this.nextIsTorpedo = false;
 				submarine.start();
 				submarines.add(submarine);
