@@ -42,7 +42,7 @@ class SubmarineServer extends Thread {
 				submarine.start();
 				submarines.add(submarine);
 				// Prevents NEP in startSubmarineControl
-				Thread.sleep(2000);
+				Thread.sleep(3000);
 				if (!hasSubmarineControlStarted) {
 					hasSubmarineControlStarted = true;
 					startSubmarineControl();
@@ -84,7 +84,7 @@ class SubmarineServer extends Thread {
 					System.err.println("Submarine control ready. Input Submarine ID (numerical e.g. 01, 02...) and direction.");
 					System.err.println("Available SubmarineIDs:");
 					// Temporarily save submarineId so it can be print and put in the ArrayList
-					String tempSubID;
+					String tempSubID = "";
 					for (Submarine sub : submarines) {
 						tempSubID = sub.getSubServerID();
 						// To only save the numerical pf the submarineID
