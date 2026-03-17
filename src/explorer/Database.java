@@ -448,7 +448,7 @@ public class Database {
                 "ssp.position_z AS sink_position_z," +
                 "sap.position_x AS arise_position_x," +
                 "sap.position_y AS arise_position_y," +
-                "s.`active`," +
+                "s.`surfaced`," +
                 "s.sunk " +
                 "FROM submarine s " +
                 "INNER JOIN `ship` ON s.shipID = ship.shipID " +
@@ -468,7 +468,7 @@ public class Database {
             submarine.put("sinkPositionZ", rs.getInt("sink_position_z"));
             submarine.put("arisePositionX", rs.getInt("arise_position_x"));
             submarine.put("arisePositionY", rs.getInt("arise_position_y"));
-            submarine.put("active", rs.getString("active"));
+            submarine.put("surfaced", rs.getString("surfaced"));
             submarine.put("sunk", rs.getString("sunk"));
             submarines.add(submarine);
         }
