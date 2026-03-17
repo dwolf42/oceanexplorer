@@ -5,6 +5,7 @@ import explorer.ShipApp;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 // Please note: code regarding the torpedo-feature is AI generated
@@ -24,6 +25,11 @@ public class ShipGui {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				win.dispose(); // Close this frame only
+				try {
+					shipApp.exit();
+				} catch (SQLException ex) {
+					throw new RuntimeException(ex);
+				}
 			}
 		});
 
