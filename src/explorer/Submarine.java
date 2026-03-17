@@ -1,6 +1,5 @@
 package explorer;
 
-import ocean.Vec;
 import ocean.Vec2D;
 import org.json.JSONArray;
 import org.json.JSONObject;

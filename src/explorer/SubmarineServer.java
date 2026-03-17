@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
 import ocean.Vec2D;
 
 // Please note: code regarding the torpedo-feature is AI generated
@@ -21,7 +22,6 @@ class SubmarineServer extends Thread {
 	private Vec2D sectorCoordinates;
 	private boolean nextIsTorpedo = false;
 	private boolean hasSubmarineControlStarted = false;
-
 
 	public SubmarineServer(int shipDatabaseIdentifier, Vec2D sector) {
 		this.shipDatabaseIdentifier = shipDatabaseIdentifier;
@@ -78,7 +78,7 @@ class SubmarineServer extends Thread {
 				// Contains the submarineIDs of available (spawned) submarines to make it easier to verify whether the user's desired submarine is available
 				ArrayList<String> availableSubmarineIDs;
 				while (!self.isInterrupted()) {
-					if (submarines.isEmpty()) {
+					if (submarines.isEmpty()) { // in case there's still no submarine
 						break;
 					}
 					availableSubmarineIDs = new ArrayList<>();
@@ -88,7 +88,7 @@ class SubmarineServer extends Thread {
 					String tempSubID = "";
 					for (Submarine sub : submarines) {
 						tempSubID = sub.getSubServerID();
-						if (null == tempSubID) {
+						if (null == tempSubID) { // in case submarine is in the ArrayList, but ready message from OceanServer is not processed yet
 							continue;
 						}
 						// To only save the numerical pf the submarineID
@@ -115,6 +115,7 @@ class SubmarineServer extends Thread {
 						continue;
 					}
 
+					// The submarine to be controlled
 					Submarine target = null;
 					for (Submarine sub : submarines) {
 						String numericID = sub.getSubServerID().split("#")[1].replace("sub", ""); // NEU
