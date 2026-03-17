@@ -214,12 +214,31 @@ public class WebApp {
     private void renderShips(HttpExchange exchange) throws SQLException, IOException {
         List<Map<String, Object>> ships = database.getAllShips();
         StringBuilder rows = new StringBuilder();
+
         for (Map<String, Object> ship : ships) {
+            String crashInfo = "";
+
+            if (ship.get("crash_position_x") != null &&
+                ship.get("crash_position_y") != null &&
+                ship.get("crash_position_z") != null)
+            {
+                crashInfo = String.format(
+                        "<br><p>Crash position: " +
+                                "<p>x: %s</p>" +
+                                "<p>y: %s</p>" +
+                                "<p>z: %s</p>" +
+                        "</p>",
+                        ship.get("crash_position_x"),
+                        ship.get("crash_position_y"),
+                        ship.get("crash_position_z"));
+            }
+
             rows.append(String.format("""
                 <tr>
                     <td data-label='Ship ID'>%s</td>
                     <td data-label='Name'>%s</td>
-                    <td data-label='Active'>%s</td>
+                    <td data-label='Active'>%s %s</td>
+                    <td data-label='Server ship id'>%s</td>
                     <td data-label='Ship data'>
                         <div class="button-container">
                             <a class="back-button" href="http://localhost:%s/ship/%s/scan-results">Show ship scan data</a>
@@ -231,6 +250,8 @@ public class WebApp {
                     ship.get("shipID"),
                     ship.get("name"),
                     ship.get("active"),
+                    crashInfo,
+                    ship.get("server_ship_id"),
                     webAppPort,
                     ship.get("shipID"),
                     webAppPort,
@@ -276,7 +297,7 @@ public class WebApp {
                 <td data-label='Sink position z'>%s</td>
                 <td data-label='Arise position x'>%s</td>
                 <td data-label='Arise position y'>%s</td>
-                <td data-label='Active'>%s</td>
+                <td data-label='Surfaced'>%s</td>
                 <td data-label='Sunk'>%s</td>
             </tr>
             """,
@@ -287,7 +308,7 @@ public class WebApp {
                     submarineData.get("sinkPositionZ"),
                     submarineData.get("arisePositionX"),
                     submarineData.get("arisePositionY"),
-                    submarineData.get("active"),
+                    submarineData.get("surfaced"),
                     submarineData.get("sunk")
             ));
         }
